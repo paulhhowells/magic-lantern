@@ -21,7 +21,7 @@ var phh = phh || {};
   phh.init = function () {
     phh.magic_lantern.init();
   };
-	
+
   phh.magic_lantern = {
     // version: 0.2
     //
@@ -83,26 +83,26 @@ var phh = phh || {};
         settings: {},
         backing_scale: null,
         init: function () {
-	        
-	        o.ui.init();
+
+          o.ui.init();
         },
         resize: function () {
-	        
-	        o.ui.resize();
+
+          o.ui.resize();
         },
         engine: function () {},
         display: {
-	        init: function () {},
-	        // css: {},
-	        updateSize: function () {},
-	        background: {
-		        cv: null,
-		        cx: null
-	        },
-	        foreground: {
-		        cv: null,
-		        cx: null
-	        }
+          init: function () {},
+          // css: {},
+          updateSize: function () {},
+          background: {
+            cv: null,
+            cx: null
+          },
+          foreground: {
+            cv: null,
+            cx: null
+          }
         },
         ui: (function () {
           var
@@ -110,25 +110,25 @@ var phh = phh || {};
             ui;
 
           _ui = {
-          	cv: null,
-	          cx: null,
-	          addHandlers: function () {},
-	          show: function () {},
-	          hide: function () {},
-	          getTouchLoc: function () {},
-	          paint: function () {}
+            cv: null,
+            cx: null,
+            addHandlers: function () {},
+            show: function () {},
+            hide: function () {},
+            getTouchLoc: function () {},
+            paint: function () {}
           };
           ui = {
-	          init: function () {},
-	          resize: function () {},
-	          mouse: {},
-	          touch: {}
+            init: function () {},
+            resize: function () {},
+            mouse: {},
+            touch: {}
           };
           return ui;
         }())
       };
 
-			o.init();
+      o.init();
 
 
     }
