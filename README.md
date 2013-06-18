@@ -10,6 +10,9 @@ version: 0.0 - unfinished
 * provides a css & js fallback for browsers that don’t support canvas
 * tested within Drupal 7
 
+## notes
+Using jQuery 1.5 for Drupal 7 compatibility
+
 ## open source
 Help to wrap this in a Drupal module would be very welcome.
 Pull requests for the javascript or css will not be sought before I reach version 1.0.
