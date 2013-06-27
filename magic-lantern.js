@@ -13,7 +13,7 @@
   _o private object, encapsulated within a closure
   o  return object
   r  return object
-  
+
   el  element
   ev  event
   tv  touch event
@@ -21,7 +21,7 @@
   str string
   arr array
   obj object
-  
+
   i, j, k loop iterators
 */
 
@@ -276,10 +276,10 @@ var phh = phh || {};
               start = Date.now ? Date.now() : +new Date, // = Date.now() || +new Date
               finish = start + o.settings.transition.duration;
               // +new Date == lteIE8 hack == create a new Date object and then cast it to a number using the unary + operator to call the internal ToNumber.
-            
+
             // todo: remove this line when dev is finished
             if (o.state.animating) {console.log('transition ERROR');}
-            
+
             o.state.animating = true;
 
             transition_func = function () {
@@ -488,13 +488,175 @@ var phh = phh || {};
             make: {
               cv: null, // a scratchpad canvas for use by make
               cx: null,
-              footer: function () {},
+              footer: function () {
+                // make footer background
+                var
+                  cv = ui.make.cv,
+                  cx = ui.make.cx,
+                  tilesheet_img = ui.tilesheet.img,
+                  y = 0,
+                  x_left,
+                  x_right,
+                  x_mid,
+                  width_mid,
+                  x_footer_tab,
+                  y_footer_tab;
+
+                // set dimensions and clear the make scratchpad canvas
+                cv.width = ui.cv.width;
+                cv.height = tilesheet_img.height;
+
+                // calculate where to draw the shadow
+                x_left = 0;
+                x_right = cv.width - ui.tilesheet.shadow.right.width;
+                x_mid = x_left + ui.tilesheet.shadow.left.width;
+                width_mid = x_right - x_mid;
+
+                // calculate the x location to draw the tab graphic from
+                x_footer_tab = Math.round((cv.width - ui.tilesheet.footer_tab.width) / 2);
+                y_footer_tab = 0;
+
+                // draw shadow
+                cx.drawImage(
+                  tilesheet_img,
+                  _ui.tilesheet.shadow.left.x,
+                  _ui.tilesheet.shadow.left.y,
+                  _ui.tilesheet.shadow.left.width,
+                  _ui.tilesheet.shadow.left.height,
+                  x_left,
+                  y,
+                  _ui.tilesheet.shadow.left.width,
+                  _ui.tilesheet.shadow.left.height
+                  );
+                cx.drawImage(
+                  tilesheet_img,
+                  _ui.tilesheet.shadow.mid.x,
+                  _ui.tilesheet.shadow.mid.y,
+                  _ui.tilesheet.shadow.mid.width,
+                  _ui.tilesheet.shadow.mid.height,
+                  x_mid,
+                  y,
+                  width_mid,
+                  _ui.tilesheet.shadow.mid.height
+                  );
+                cx.drawImage(
+                  tilesheet_img,
+                  _ui.tilesheet.shadow.right.x,
+                  _ui.tilesheet.shadow.right.y,
+                  _ui.tilesheet.shadow.right.width,
+                  _ui.tilesheet.shadow.right.height,
+                  x_right,
+                  y,
+                  _ui.tilesheet.shadow.right.width,
+                  _ui.tilesheet.shadow.right.height
+                  );
+
+                // draw tab
+                cx.drawImage(
+                  tilesheet_img,
+                  _ui.tilesheet.footer_tab.x,
+                  _ui.tilesheet.footer_tab.y,
+                  _ui.tilesheet.footer_tab.width,
+                  _ui.tilesheet.footer_tab.height,
+                  x_footer_tab,
+                  y_footer_tab,
+                  _ui.tilesheet.footer_tab.width,
+                  _ui.tilesheet.footer_tab.height
+                  );
+
+                // take img data from make.canvas and store it ready for use
+                _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
+              },
               buttons: function () {},
-              scaleIcons: function (icons) {},
-              cutIcon: function (cx, icon) {},
-              cutStaticButton: function (cv, cx, icon) {},
-              cutHoverButton: function (cx, icon, half_height, fill_style) {},
-              darkenIcon: function (cx, icon, fill_style) {}
+              scaleIcons: function (icons) {
+                // scale up icons when they need to match a backing scale > 1
+                // arguments: icons is an object, passed by reference
+                var
+                  icon,
+                  button,
+                  button_name,
+                  i,
+                  i_loc;
+
+                //if (o.backing_scale !== 1) {
+                for (button_name in icons) {
+                  if (icons.hasOwnProperty(button_name)) {
+                    icon = icons[button_name];
+                    // adjust the various properties of icon accordingly
+
+                    icon.width = icon.width * o.backing_scale;
+                    icon.height = icon.height * o.backing_scale;
+
+                    if (icon.adjust) {
+                      if(icon.adjust.x) {
+                        icon.adjust.x *= o.backing_scale;
+                      }
+                      if(icon.adjust.y) {
+                        icon.adjust.y *= o.backing_scale;
+                      }
+                    }
+
+                    if (icon.arr) {
+                      for (i = 0; i < icon.arr.length; i += 1) {
+                        i_loc = icon.arr[i];
+                        i_loc[0] *= o.backing_scale;
+                        i_loc[1] *= o.backing_scale;
+                      }
+                    }
+                  }
+                }
+                //}
+              },
+              cutIcon: function (cx, icon) {
+                // cut an icon shape out of a shape drawn on the canvas
+                // requires: coordinates that overlap and are anti clockwise
+                // called by: cutStaticButton(), cutHoverButton(), darkenIcon()
+                var
+                  i,
+                  i_x, i_y,
+                  x, y;
+
+                x = icon.x;
+                y = icon.y;
+
+                if (icon.hasOwnProperty('adjust')) {
+                  x += icon.adjust.x || 0;
+                  y += icon.adjust.y || 0;
+                }
+
+                cx.moveTo(icon.x, icon.y);
+
+                for (i = 0; i < icon.arr.length; i += 1) {
+                  i_x = x + icon.arr[i][0];
+                  i_y = y + icon.arr[i][1];
+                  cx.lineTo(i_x, i_y);
+                }
+              },
+              cutStaticButton: function (cv, cx, icon) {
+                cx.beginPath();
+                cx.rect(0, 0, cv.width, cv.height); // clockwise
+                _ui.make.cutIcon(cx, icon);
+                cx.fill();
+                cx.closePath();
+              },
+              cutHoverButton: function (cx, icon, half_height, fill_style) {
+                // arguments: fill_style is optional, defaults to white
+                var radius = half_height - 2;
+                cx.fillStyle = fill_style || "#fff";
+                cx.beginPath();
+                cx.arc(icon.centre.x, icon.centre.y, radius, 0, THREESIXTY, false);
+                _ui.make.cutIcon(cx, icon);
+                cx.fill();
+                cx.closePath();
+              },
+              darkenIcon: function (cx, icon, fill_style) {
+                // arguments: fill_style is optional
+                cx.fillStyle = fill_style || 'rgba(0, 0, 0, 0.4)';
+                cx.beginPath();
+                _ui.make.cutIcon(cx, icon);
+                cx.fill();
+                cx.closePath();
+              }
             },
             addHandlers: function () {
               _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
@@ -527,6 +689,11 @@ var phh = phh || {};
               if (o.backing_scale !== 1) {
                 _ui.make.scaleIcons(_ui.icon);
               }
+
+              // load in tilesheet, and run a callback to process it once it has loaded
+
+
+
 
               _ui.addHandlers();
 
@@ -618,7 +785,7 @@ var phh = phh || {};
       // could this be added only once window has finished loading,
       // and thus do a resize once if required at end of init?
       // todo: need to check that the initialisation is not reliant on this callback - for browsers that do not trigger resize
-      $(window).load(function(){
+      $(window).load(function () {
         $(window).resize(
           (function (o) {
             return function () {
@@ -709,7 +876,7 @@ var phh = phh || {};
 
       // belt & braces backup, all assets (including img tags) will have been loaded when this is called
       // carries on despite 404s however
-      $(window).load(function (){
+      $(window).load(function () {
         final_callback();
       });
     }
