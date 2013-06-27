@@ -47,11 +47,11 @@ var phh = phh || {};
       window.msRequestAnimationFrame ||
       false;
   }());
-  
+
   $(function () { // readyState
     phh.init();
   });
-  
+
   phh.init = function () {
     phh.magic_lantern.init();
   };
@@ -66,6 +66,7 @@ var phh = phh || {};
       slides_base_class: 'slides-base',
       slides_overlay_class: 'slides-overlay',
       slides_ui_class: 'slides-ui',
+      slides_ui_hidden_class: 'slides-ui-hidden',
       transition: {
         duration : 2100, // milliseconds
         start: {
@@ -85,8 +86,10 @@ var phh = phh || {};
       },
       tilesheet_src: {
         // resolution based on o.backing_scale
-        x1: "../sites/all/themes/inhouse/chr/slippy-tilesheet_x1.png",
-        x2: "../sites/all/themes/inhouse/chr/slippy-tilesheet_x2.png"
+        //x1: "../sites/all/themes/inhouse/chr/slippy-tilesheet_x1.png",
+        //x2: "../sites/all/themes/inhouse/chr/slippy-tilesheet_x2.png"
+        x1: "slippy-tilesheet_x1.png",
+        x2: "slippy-tilesheet_x2.png"
       }
     },
     init: function () {
@@ -110,25 +113,30 @@ var phh = phh || {};
         $wrapper,
         THREESIXTY = (Math.PI / 180) * 360;
 
+console.log('canvas_slideshow');
+
       $wrapper = $(slideshow_container);
       $wrapper.
-        wrapInner('<canvas />'). // wrap contents of selector in canvas
-        addClass('slides');             
+        wrapInner('<canvas/>'). // wrap contents of selector in canvas
+        addClass('slides');
+        
       $('canvas', $wrapper).addClass(the.prefs.slides_base_class);
-       
+
       $('<canvas />').
         addClass(the.prefs.slides_overlay_class).
         appendTo($wrapper);
+        
       $('<canvas />').
-        addClass(the.prefs.slides_ui_class). 
+        addClass(the.prefs.slides_ui_class).
         appendTo($wrapper);
-      
-      debugger;
-      
+        
+      // $('<div />').addClass("C").appendTo($wrapper);
+
+
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 8000,       // pause between transitions, milliseconds
+          pause : 9000000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           }
@@ -139,8 +147,8 @@ var phh = phh || {};
         slides: [], // {text, img {el, width, height}, link }
         state: {
           pause_while_ui_visible: false, // was: ui.ui_visible_pause
-          looping: false //,
-          //animating: false,   // transitioning ?
+          looping: false,
+          transitioning: false, // read by resize, written by transition()
           //current_slide: 0,
           //target_slide: 0
         },
@@ -155,10 +163,12 @@ var phh = phh || {};
           //   });
           // });
 
+console.log('o.init');
+
           // build slides array and imgs array
           $(the.prefs.slide_selector, $wrapper).each(function () {
             var img = {
-              el: $('img', this)
+              el: $('img', this)[0]
             };
 
             o.imgs.push(img);
@@ -199,6 +209,7 @@ var phh = phh || {};
 
 
 
+console.log('/o.init');
 
           // o.ui.init(); should be called from a callback on img load
         }, /// init
@@ -207,12 +218,14 @@ var phh = phh || {};
           // this must be the wrong image to repaint with (most of the time)
           // so pick the correct image or replace with a 'paint' function that paints the right thing
 
+console.log('o.resize');
+
           o.display.updateSize();
           o.ui.resize();
 
           // if not animating / transitioning then re-draw
           // and then draw the current state, cos changing width will wipe the canvas
-          if (!o.state.animating) {
+          if (!o.state.transitioning) {
             //o.display.background.cx.drawImage(first_img.el, 0, 0, o.display.background.cv.width, o.display.background.cv.height);
 
             // o.background.cx.drawImage(o.imgs[o.engine.looping.current].el, 0, 0, o.canvas.width, o.canvas.height);
@@ -276,6 +289,7 @@ var phh = phh || {};
             }, o.settings.pause);
           },
           transition: function () {
+console.log('transition');
             var
               transition_id,
               transition_func,
@@ -284,9 +298,9 @@ var phh = phh || {};
               // +new Date == lteIE8 hack == create a new Date object and then cast it to a number using the unary + operator to call the internal ToNumber.
 
             // todo: remove this line when dev is finished
-            if (o.state.animating) {console.log('transition ERROR');}
+            if (o.state.transitioning) {console.log('transition ERROR');}
 
-            o.state.animating = true;
+            o.state.transitioning = true;
 
             transition_func = function () {
               var
@@ -300,27 +314,33 @@ var phh = phh || {};
               current_time = (Date.now) ? Date.now() : +new Date;
               position = current_time > finish ? 1 : (current_time - start) / o.settings.transition.duration;
 
-              x = o.canvas.width * (o.settings.transition.start.x + (o.settings.transition.delta.x * position));
-              y = o.canvas.height * (o.settings.transition.start.y + (o.settings.transition.delta.y * position));
-              width =  o.canvas.width * (o.settings.transition.start.width + (o.settings.transition.delta.width * position));
-              height = o.canvas.height * (o.settings.transition.start.height + (o.settings.transition.delta.height * position));
-              opacity = o.settings.transition.start.opacity + (o.settings.transition.delta.opacity * position);
+              o.display.foreground.x = o.display.foreground.cv.width * (o.settings.transition.start.x + (o.settings.transition.delta.x * position));
+              o.display.foreground.y = o.display.foreground.cv.height * (o.settings.transition.start.y + (o.settings.transition.delta.y * position));
+              o.display.foreground.width =  o.display.foreground.cv.width * (o.settings.transition.start.width + (o.settings.transition.delta.width * position));
+              o.display.foreground.height = o.display.foreground.cv.height * (o.settings.transition.start.height + (o.settings.transition.delta.height * position));
+              o.display.foreground.opacity = o.settings.transition.start.opacity + (o.settings.transition.delta.opacity * position);
 
               // retina / hi-dpi displays do not need to be integers, nor modern browsers with requestAnimationFrame
               if (!phh.test.shimRequestAnimationFrame) {
                 // bitwise math floor-truncation
-                x = ~~x;
+                /*x = ~~x;
                 y = ~~y;
                 width = ~~width;
                 height = ~~height;
+                */
+                o.display.foreground.x = ~~o.display.foreground.x;
+                o.display.foreground.y = ~~o.display.foreground.y;
+                o.display.foreground.cv.width = ~~o.display.foreground.width;
+                o.display.foreground.cv.height = ~~o.display.foreground.height;
+
               }
 
               // todo: replace vars above with these obj props
-              o.display.foreground.opacity = opacity;
-              o.display.foreground.x = x;
-              o.display.foreground.y = y;
-              o.display.foreground.cv.width = width;
-              o.display.foreground.cv.height = height;
+              //o.display.foreground.opacity = opacity;
+              //o.display.foreground.x = x;
+              //o.display.foreground.y = y;
+              //o.display.foreground.cv.width = width;
+              //o.display.foreground.cv.height = height;
 
               o.display.paint();
 
@@ -338,8 +358,8 @@ var phh = phh || {};
                 clearInterval(transition_id);
                 // }
                 o.engine.looping.current = o.engine.looping.next;
-                o.state.animating = false;
-                o.loop();
+                o.state.transitioning = false;
+                o.engine.loop();
               } else {
                 if (phh.test.shimRequestAnimationFrame) {
                   requestAniFrame(transition_func); // behaves more like a setTimeout than a setInterval
@@ -359,25 +379,37 @@ var phh = phh || {};
           init: function () {
             // called by: o.init()
 
+console.log('display.init');
+
             o.display.background.cv = $('canvas.' + the.prefs.slides_base_class, $wrapper)[0];
             o.display.background.cx = o.display.background.cv.getContext("2d");
             o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
             o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
+
+console.log('/display.init');
           },
           css: {}, // defined by: updateSize(), used by:
           updateSize: function () {
             var
               img,
               wrapper_width;
+            // this === o.display
+
+console.log('display.updateSize');
 
             // img = o.imgs[0];
             img = o.slides[0].img;
 
             wrapper_width = $wrapper.width();
 
+
             // check in the code if these properties are used elsewhere
             //img.width = img.el.width;
             //img.height = img.el.height;
+
+//console.log(img.el.width);
+//console.log(img.el.height);
+//debugger;
 
             o.display.css = {
                 width: wrapper_width, // can assume it's already an integer
@@ -385,13 +417,18 @@ var phh = phh || {};
               };
 
             // set canvas attributes (css * backing_scale)
-            o.background.cv.width  = o.display.css.width  * o.backing_scale;
-            o.background.cv.height = o.display.css.height * o.backing_scale;
-            o.foreground.cv.width  = o.display.css.width  * o.backing_scale;
-            o.foreground.cv.height = o.display.css.height * o.backing_scale;
+            o.display.background.cv.width  = o.display.css.width  * o.backing_scale;
+            o.display.background.cv.height = o.display.css.height * o.backing_scale;
+            o.display.foreground.cv.width  = o.display.css.width  * o.backing_scale;
+            o.display.foreground.cv.height = o.display.css.height * o.backing_scale;
 
-            $(o.background.cv).css(o.css);
-            $(o.foreground.cv).css(o.css);
+
+
+// debugger;
+            $(o.display.background.cv).css(o.display.css);
+            $(o.display.foreground.cv).css(o.display.css);
+
+console.log('/display.updateSize');
           },
           background: {
             cv: null,
@@ -412,6 +449,8 @@ var phh = phh || {};
             height: null
           },
           paint: function () {
+
+console.log('o.display.paint');
 
             /*o.display.background.cx.drawImage(
               o.imgs[o.engine.looping.current].el,
@@ -463,10 +502,62 @@ var phh = phh || {};
           _ui = {
             cv: null,
             cx: null,
-            show: function () {},
-            hide: function () {},
+            show: function () {
+              ui.visible = true;
+              o.state.pause_while_ui_visible = true;
+
+console.log(o.state.looping);
+
+              _ui.paint();
+              $(_ui.cv).removeClass(the.prefs.slides_ui_hidden_class);
+            },
+            hide: function () {
+              ui.visible = false;
+              o.state.pause_while_ui_visible = false;
+
+ console.log(o.state.looping);
+
+              $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
+              _ui.paint();
+
+              o.engine.pause();
+            },
             getTouchLoc: function () {},
-            paint: function () {},
+            paint: function () {
+              // draw controls
+              //  prev
+              //  play_pause
+              //  next
+              var image_data;
+console.log('_ui.paint');
+              // draw plain or hover according to state
+              image_data = _ui.chrome.prev.plain;
+              _ui.cx.putImageData(image_data, _ui.chrome.prev.x, _ui.chrome.prev.y);
+
+              image_data = _ui.chrome.play.plain;
+              _ui.cx.putImageData(image_data, _ui.chrome.play.x, _ui.chrome.play.y);
+
+              image_data = _ui.chrome.next.plain;
+              _ui.cx.putImageData(image_data, _ui.chrome.next.x, _ui.chrome.next.y);
+
+              /*
+              image_data = _ui.chrome.prev.hover;
+              _ui.cx.putImageData(image_data, _ui.chrome.prev.x, _ui.chrome.prev.y + 90);
+
+              image_data = _ui.chrome.play.hover;
+              _ui.cx.putImageData(image_data, _ui.chrome.play.x, _ui.chrome.play.y + 90);
+
+              image_data = _ui.chrome.next.hover;
+              _ui.cx.putImageData(image_data, _ui.chrome.next.x, _ui.chrome.next.y + 90);
+              */
+
+
+              // draw footer
+              //  footer bg
+              //  show / hide
+
+console.log('/_ui.paint');
+            },
             tilesheet: {
               img: new Image(), // to load tilesheet into
               shadow: {
@@ -478,7 +569,7 @@ var phh = phh || {};
               show: {x: 144, y: 19, width: 20, height: 16},
               hide: {x: 164, y: 19, width: 20, height: 16}
             },
-            icon: {},
+            // icon: {},
             chrome: {
               footer: null, // img_data
 
@@ -494,12 +585,17 @@ var phh = phh || {};
             make: {
               cv: null, // a scratchpad canvas for use by make
               cx: null,
+              init: function () {
+console.log('_ui.make.init');
+                this.cv = document.createElement('canvas');
+                this.cx = this.cv.getContext('2d');
+              },
               footer: function () {
                 // make footer background
                 var
-                  cv = ui.make.cv,
-                  cx = ui.make.cx,
-                  tilesheet_img = ui.tilesheet.img,
+                  cv = _ui.make.cv,
+                  cx = _ui.make.cx,
+                  tilesheet_img = _ui.tilesheet.img,
                   y = 0,
                   x_left,
                   x_right,
@@ -508,18 +604,20 @@ var phh = phh || {};
                   x_footer_tab,
                   y_footer_tab;
 
+console.log('make.footer');
+
                 // set dimensions and clear the make scratchpad canvas
-                cv.width = ui.cv.width;
+                cv.width = _ui.cv.width;
                 cv.height = tilesheet_img.height;
 
                 // calculate where to draw the shadow
                 x_left = 0;
-                x_right = cv.width - ui.tilesheet.shadow.right.width;
-                x_mid = x_left + ui.tilesheet.shadow.left.width;
+                x_right = cv.width - _ui.tilesheet.shadow.right.width;
+                x_mid = x_left + _ui.tilesheet.shadow.left.width;
                 width_mid = x_right - x_mid;
 
                 // calculate the x location to draw the tab graphic from
-                x_footer_tab = Math.round((cv.width - ui.tilesheet.footer_tab.width) / 2);
+                x_footer_tab = Math.round((cv.width - _ui.tilesheet.footer_tab.width) / 2);
                 y_footer_tab = 0;
 
                 // draw shadow
@@ -572,38 +670,47 @@ var phh = phh || {};
 
                 // take img data from make.canvas and store it ready for use
                 _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
+console.log('/make.footer');
               },
               button: {
-                button_height: 40,
-                gap_between_buttons: null,
-                edge_offset: null,               
-                icon: {
-                  prev: {
-                    width: 18, height: 17,
-                    arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
-                    centre: {}, adjust: {x: -2}
-                  },
-                  next: {
-                    width: 18, height: 17,
-                    arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
-                    centre: {}, adjust: {x: 2}
-                  },
-                  play: {
-                    width: 21, height: 21,
-                    arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
-                    centre: {}, adjust: {x: 3, y: -1}
-                  },
-                  pause: {
-                    width: 15, height: 21,
-                    arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
-                    centre: {}
+                defaults: {
+                  button_height: 40,
+                  edge_offset: 45,
+                  hovered_icon_fill_style: 'rgba(0, 0, 0, 0.2)',
+
+                  // todo: should this be here, or use _ui.icon? the icons are specific to the buttons!
+                  icon: {
+                    prev: {
+                      width: 18, height: 17,
+                      arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
+                      centre: {}, adjust: {x: -2}
+                    },
+                    next: {
+                      width: 18, height: 17,
+                      arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
+                      centre: {}, adjust: {x: 2}
+                    },
+                    play: {
+                      width: 21, height: 21,
+                      arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
+                      centre: {}, adjust: {x: 3, y: -1}
+                    },
+                    pause: {
+                      width: 15, height: 21,
+                      arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
+                      centre: {}
+                    }
                   }
                 },
+                gap_between_buttons: null,
+                edge_offset: null,
+                button_height: null,
                 init: function () {
-                  this.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line 
+                  this.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                   this.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
                 },
                 make: function () {
+                // todo: rename, make.button.make is poor naming
                   var
                     cv = _ui.make.cv,
                     cx = _ui.make.cx,
@@ -616,13 +723,20 @@ var phh = phh || {};
                     i,
                     icon,
                     x,
-                    y;                   
-                  //_ui.make.button.button_height
-                  //_ui.make.button.edge_offset
-                  //_ui.make.button.gap_between_buttons
-                  
-                  // make a copy of _ui.make.button.icon to resize, 
-                  // otherwise will distort with successive resizing
+                    y;
+                  //_ui.make.button.defaults.button_height
+                  //_ui.make.button.defaults.edge_offset
+                  //_ui.make.button.defaults.gap_between_buttons
+
+console.log('make.button');
+
+                  // make a copy of the value of _ui.make.button.icon to resize, otherwise will distort with successive resizing
+                  icon = phh.getObjectValue(_ui.make.defaults.button.icon);
+
+                  // scale the icon coordinates to match backing scale
+                  _ui.make.scaleIcons(icon);
+
+console.log('/make.button');
                 }
               },
               buttons: function () {
@@ -648,21 +762,27 @@ var phh = phh || {};
                   x,
                   y;
                 var hovered_icon_fill_style = 'rgba(0, 0, 0, 0.2)'; // overlays, does not replace previous darkening
-                
-                gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line 
-                one_third_width = ~~(ui.cv.width / 3);  
-                centre_width = ui.cv.width - (one_third_width * 2);
+
+console.log('make.buttons()');
+
+                gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
+//console.log('?');
+                edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
+//console.log('?');
+                cv.height = (o.backing_scale === 1) ? button_height : button_height * o.backing_scale;
+
+//console.log('?');
+                one_third_width = ~~(_ui.cv.width / 3);
+                centre_width = _ui.cv.width - (one_third_width * 2);
                 play_pause_width = one_third_width - gap_between_buttons;
                 half_centre_width = ~~(centre_width / 2);
-                edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
-                cv.height = (o.backing_scale === 1) ? button_height : button_height * o.backing_scale;
                 half_height = ~~(cv.height / 2);
-                
+//console.log('? a');
                 // gradient
                 gr = cx.createLinearGradient(0, 0, 0, cv.height);
                 gr.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
                 gr.addColorStop(1, 'rgba(255, 255, 255, 1)');
-                
+
                 icon = {
                   prev: {
                     width: 18,
@@ -692,96 +812,104 @@ var phh = phh || {};
                     centre: {}
                   }
                 };
-                
+
+//console.log('? b');
+
                 // scale the icon coordinates to match backing scale
-                ui.make.scaleIcons(icon);
-   
+                _ui.make.scaleIcons(icon);
+//console.log('? c');
                 icon.prev.centre.x = edge_offset;
                 icon.prev.centre.y = half_height;
                 icon.prev.x = icon.prev.centre.x - ~~(icon.prev.width / 2);
                 icon.prev.y = icon.prev.centre.y - ~~(icon.prev.height / 2);
-        
+
                 icon.next.centre.x = one_third_width - edge_offset;
                 icon.next.centre.y = half_height;
                 icon.next.x = icon.next.centre.x - ~~(icon.next.width / 2);
                 icon.next.y = icon.next.centre.y - ~~(icon.next.height / 2);
-        
+
                 icon.play.centre.x = half_centre_width;
                 icon.play.centre.y = half_height;
                 icon.play.x = ~~((centre_width - icon.play.width) / 2);
                 icon.play.y = icon.play.centre.y - ~~(icon.play.height / 2);
-        
+
                 icon.pause.centre.x = half_centre_width;
                 icon.pause.centre.y = half_height;
                 icon.pause.x = ~~((centre_width - icon.pause.width) / 2);
                 icon.pause.y = icon.pause.centre.y - ~~(icon.pause.height / 2);
-                
-                
+
+//console.log('? d');
+
                 // prev button
                 _ui.chrome.prev.x = 0;
                 _ui.chrome.prev.y = 0;
                 cv.width = play_pause_width; // sets correct width and resets canvas
-                cx.fillStyle = gr;            
+                cx.fillStyle = gr;
                 _ui.make.cutStaticButton(cv, cx, icon.prev);
                 _ui.make.darkenIcon(cx, icon.prev);
                 _ui.chrome.prev.plain = cx.getImageData(0, 0, cv.width, cv.height);
-                
+
                 // prev hover
                 _ui.make.cutHoverButton(cx, icon.prev, half_height);
                 _ui.make.darkenIcon(cx, icon.prev, hovered_icon_fill_style);
                 _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
-        
+
                 // next button
                 _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
                 _ui.chrome.next.y = 0;
                 cv.width = play_pause_width;
-                cx.fillStyle = gr;        
+                cx.fillStyle = gr;
                 _ui.make.cutStaticButton(cv, cx, icon.next);
                 _ui.make.darkenIcon(cx, icon.next);
                 _ui.chrome.next.plain = cx.getImageData(0, 0, cv.width, cv.height);
-                
+
                 // next hover
                 _ui.make.cutHoverButton(cx, icon.next, half_height);
                 _ui.make.darkenIcon(cx, icon.next, hovered_icon_fill_style);
                 _ui.chrome.next.hover = cx.getImageData(0, 0, cv.width, cv.height);
-                
+
                 // play / pause button
-                _ui.chrome.play.x = ui.chrome.pause.x = one_third_width;       
-                _ui.chrome.play.y = ui.chrome.pause.y = 0;
+                _ui.chrome.play.x = _ui.chrome.pause.x = one_third_width;
+                _ui.chrome.play.y = _ui.chrome.pause.y = 0;
                 cv.width = centre_width; // sets correct width and resets canvas
                 cx.fillStyle = gr;
-        
+
                 // play
                 _ui.make.cutStaticButton(cv, cx, icon.play);
                 _ui.make.darkenIcon(cx, icon.play);
                 _ui.chrome.play.plain = cx.getImageData(0, 0, cv.width, cv.height);
-                
+
                 // play hover
                 _ui.make.cutHoverButton(cx, icon.play, half_height);
                 _ui.make.darkenIcon(cx, icon.play, hovered_icon_fill_style);
                 _ui.chrome.play.hover = cx.getImageData(0, 0, cv.width, cv.height);
-        
+
                 // pause
                 cv.width = centre_width; // sets correct width and resets canvas
                 cx.fillStyle = gr;
                 _ui.make.cutStaticButton(cv, cx, icon.pause);
                 _ui.make.darkenIcon(cx, icon.pause);
                 _ui.chrome.pause.plain = cx.getImageData(0, 0, cv.width, cv.height);
-                
+
                 // pause hover
-                _ui.make.cutHoverButton(cx, icon.pause, half_height);    
+                _ui.make.cutHoverButton(cx, icon.pause, half_height);
                 _ui.make.darkenIcon(cx, icon.pause, hovered_icon_fill_style);
-                _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);     
+                _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
+
+console.log('/make.buttons');
               },
               scaleIcons: function (icons) {
                 // scale up icons when they need to match a backing scale > 1
                 // arguments: icons is an object, passed by reference
+                // so this should only be called once from an init()
                 var
                   icon,
                   button,
                   button_name,
                   i,
                   i_loc;
+
+console.log('make.scaleIcons');
 
                 //if (o.backing_scale !== 1) {
                 for (button_name in icons) {
@@ -811,6 +939,8 @@ var phh = phh || {};
                   }
                 }
                 //}
+
+console.log('/make.scaleIcons');
               },
               cutIcon: function (cx, icon) {
                 // cut an icon shape out of a shape drawn on the canvas
@@ -820,7 +950,7 @@ var phh = phh || {};
                   i,
                   i_x, i_y,
                   x, y;
-
+//console.log('make.cutIcon');
                 x = icon.x;
                 y = icon.y;
 
@@ -836,8 +966,10 @@ var phh = phh || {};
                   i_y = y + icon.arr[i][1];
                   cx.lineTo(i_x, i_y);
                 }
+//console.log('/make.cutIcon');
               },
               cutStaticButton: function (cv, cx, icon) {
+console.log('cutStaticButton');
                 cx.beginPath();
                 cx.rect(0, 0, cv.width, cv.height); // clockwise
                 _ui.make.cutIcon(cx, icon);
@@ -846,6 +978,7 @@ var phh = phh || {};
               },
               cutHoverButton: function (cx, icon, half_height, fill_style) {
                 // arguments: fill_style is optional, defaults to white
+console.log('cutHoverButton');
                 var radius = half_height - 2;
                 cx.fillStyle = fill_style || "#fff";
                 cx.beginPath();
@@ -855,6 +988,7 @@ var phh = phh || {};
                 cx.closePath();
               },
               darkenIcon: function (cx, icon, fill_style) {
+console.log('darkenIcon');
                 // arguments: fill_style is optional
                 cx.fillStyle = fill_style || 'rgba(0, 0, 0, 0.4)';
                 cx.beginPath();
@@ -864,6 +998,7 @@ var phh = phh || {};
               }
             },
             addHandlers: function () {
+console.log('addHandlers');
               _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
               _ui.cv.addEventListener("touchmove",   ui.touch.move,   false);
               _ui.cv.addEventListener("touchend",    ui.touch.end,    false);
@@ -882,39 +1017,77 @@ var phh = phh || {};
             }
           };
           ui = {
-            footer_height: 40, // todo: move this to settings?
+            footer_height: 40, // todo: move this to o.settings?
             init: function () {
               // runs once only
               // called by callback on first image load
+              var tilesheetLoaded;
 
-              _ui.cv = $('canvas.' +the.prefs.slides_ui_class, $wrapper)[0];
-              _ui.cx = _ui.cv.getContext("2d");
+console.log('ui.init');
+              _ui.make.init();
 
               // scale up the button icons if hi-res or retina
               if (o.backing_scale !== 1) {
                 _ui.make.scaleIcons(_ui.icon);
               }
 
-              // load in tilesheet, and run a callback to process it once it has loaded
+              _ui.cv = $('canvas.' +the.prefs.slides_ui_class, $wrapper)[0];
+              _ui.cx = _ui.cv.getContext("2d");
+              _ui.cv.width = o.display.background.cv.width;
+              _ui.cv.height = o.display.background.cv.width + ui.footer_height;
 
+              // init() button / buttons
 
-
-
-              _ui.addHandlers();
-
-
-
+              _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
 
               // load o.settings.tilesheet
               // and fire callback once it's loaded
+              // load in tilesheet, and run a callback to process it once it has loaded
+              tilesheetLoaded = function () {
+                _ui.make.footer(); // makes footer from tilesheet source
+
+                // todo: should only paint if visible!
+                //_ui.paint();
+
+                // just for testing proto
+                $('.wrapper').append(_ui.make.cv);
+              };
+              _ui.tilesheet.img = new Image();
+              _ui.tilesheet.img.onload = tilesheetLoaded;
+              _ui.tilesheet.img.src = (o.backing_scale === 1) ? the.prefs.tilesheet_src.x1 : the.prefs.tilesheet_src.x2;
+
+              // while perhaps waiting for tilesheet to load
+
+              _ui.addHandlers();
             },
             resize: function () {
+console.log('ui.resize');
               // o.resizeCanvas used to call these
               // o.ui.calculateSizes();
               // o.ui.paint();
+
+              // could there be a race condition where this runs before ui.init() ?
+              // dont want to make buttons or footer if there could be!
+              // todo: test for this
+              _ui.make.buttons();
+              _ui.make.footer();
+
+              // todo: should only paint if visible!
+              //_ui.paint();
             },
-            mouse: {},
-            touch: {}
+            mouse: {
+              over: function (ev) {},
+              out: function (ev) {},
+              move: function (ev) {},
+              down: function (ev) {},
+              up: function (ev) {}
+            },
+            touch: {
+              start: function (tv) {},
+              move: function (tv) {},
+              end: function (tv) {},
+              cancel: function (tv) {}
+            }
           };
           return ui;
         }()), /// ui
@@ -939,14 +1112,27 @@ var phh = phh || {};
         } /// setBackingScale
       }; /// o
 
-      o.init();
+      o.init(); // calls: display.init()
 
       // when first image loaded, do this:
       phh.imgLoader([o.imgs[0]], function () {
         var
           first_img = o.slides[0].img;
 
+// console.log('imgLoader');
+// console.log(o.display.background);
+// console.log(o.display.background.cv);
+// console.log(o.display.background.cv.width);
+// console.log(o.display.background.cv.height);
+
+//debugger;
         o.display.updateSize();
+
+// console.log('imgLoader b');
+// console.log(o.display.background);
+// console.log(o.display.background.cv);
+// console.log(o.display.background.cv.width);
+// console.log(o.display.background.cv.height);
 
         // draw current state
         o.display.background.cx.drawImage(
@@ -1134,22 +1320,25 @@ var phh = phh || {};
     }
     return r;
   }());
-  
+
   phh.getObjectValue = function (o) {
+    // v1.0
     // returns the value of the object passed in as an argument
     // rather than returning a reference to the object
-    var 
+    // arguments: may be an object, or a property of the object (i.e. string, number, array etc.)
+    // not expecting a function as an argument
+    var
       p, // property
       r; // return object
-    
-    r = (o.constructor) ? new o.constructor() : {};          
+
+    r = (o.constructor) ? new o.constructor() : {};
     for (p in o) {
       if (o.hasOwnProperty(p)) {
         // if the property is an array or an object then recurse
         r[p] = (typeof o[p] === "object") ? phh.getObjectValue(o[p]) : o[p];
-      }        
+      }
     }
-    return r;         
-  };  
+    return r;
+  };
 
 }(jQuery));
