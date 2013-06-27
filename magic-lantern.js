@@ -1,5 +1,30 @@
 /*jslint bitwise: true, eqeq: false, sloppy: true, white: true, browser: true, devel: true, indent: 2, nomen: true, maxerr: 1000 */
 
+/* style
+
+  SYMBOLIC_CONSTANTS
+  variable_names and object_properties
+  $jquery_objects
+  functionNames
+  methodNames
+  ConstructorClassNames
+  css-class-names
+
+  _o private object, encapsulated within a closure
+  o  return object
+  r  return object
+  
+  el  element
+  ev  event
+  tv  touch event
+
+  str string
+  arr array
+  obj object
+  
+  i, j, k loop iterators
+*/
+
 var phh = phh || {};
 
 (function ($) {
@@ -9,6 +34,11 @@ var phh = phh || {};
     // v1.0
     // based on https://gist.github.com/joelambert/1002116 & Paul Irish shim
     // but does not fallback to setInterval
+
+    //console.log(window.requestAnimationFrame);      // undefined
+    //console.log(!!(window.requestAnimationFrame));  // false
+    //console.log(!(window.requestAnimationFrame));   // true
+    // shim requestAnimationFrame instead of requestAniFrame ?
 
     return window.requestAnimationFrame ||
       window.webkitRequestAnimationFrame ||
@@ -26,9 +56,12 @@ var phh = phh || {};
     // version: 0.2
     //
     prefs: {
-      slides_selector : '#block-views-front-page-slideshow-block',
-      slide_frame_selector : '.view-content',
-      slide_selector : '.views-row',
+      slides_selector: '#block-views-front-page-slideshow-block',
+      slide_frame_selector: '.view-content',
+      slide_selector: '.views-row',
+      slides_base_class: 'slides-base',
+      slides_overlay_class: 'slides-overlay',
+      slides_ui_class: 'slides-ui',
       transition: {
         duration : 2100, // milliseconds
         start: {
@@ -69,19 +102,21 @@ var phh = phh || {};
     canvas_slideshow: function (slideshow_container) {
       var
         o,
+        the = this,
         $wrapper,
         THREESIXTY = (Math.PI / 180) * 360;
 
       $wrapper = $(slideshow_container);
       $wrapper.
         wrapInner('<canvas />'). // wrap contents of selector in canvas
-        addClass('slides slides-base');
+        addClass('slides').
+        addClass('slides-base'); // the.prefs.slides_base_class
 
       $('<canvas />').
-        addClass('slides-overlay').
+        addClass('slides-overlay'). // the.prefs.slides_overlay_class
         appendTo($wrapper);
       $('<canvas />').
-        addClass('slides-ui').
+        addClass('slides-ui'). // the.prefs.slides_ui_class
         appendTo($wrapper);
 
       o = {
@@ -93,7 +128,7 @@ var phh = phh || {};
           }
         },
         backing_scale: null,
-        backing_store_ratio: null,       
+        backing_store_ratio: null,
         imgs: [], // a short cut to img objects in slides // an array of all the slide images
         slides: [], // {text, img {el, width, height}, link }
         state: {
@@ -104,31 +139,84 @@ var phh = phh || {};
           //target_slide: 0
         },
         init: function () {
-        
+          $.extend(true, o.settings.transition, the.prefs.transition);
+          o.setBackingScale();
+
+          // build imgs array
+          // $('img', $wrapper).each(function () { // could swap 'img' for a slide selector?
+          //   o.imgs.push({
+          //     el: this
+          //   });
+          // });
+
+          // build slides array and imgs array
+          $(the.prefs.slide_selector, $wrapper).each(function () {
+            var img = {
+              el: $('img', this)
+            };
+
+            o.imgs.push(img);
+            o.slides.push({
+              img: img
+            });
+          });
+
+          // get references to the canvas within the dom
+          //o.canvas = $('canvas', $wrapper)[0];
+          //o.context = o.canvas.getContext("2d");
+
           o.display.init();
-          o.ui.init();
-        },
+
+// fg equivalent to o.overlay
+
+          // convert transition percentages into decimals
+          o.settings.transition.start.x =      o.settings.transition.start.x * 0.01;
+          o.settings.transition.start.y =      o.settings.transition.start.y * 0.01;
+          o.settings.transition.start.width =  o.settings.transition.start.width * 0.01;
+          o.settings.transition.start.height = o.settings.transition.start.height * 0.01;
+
+          o.settings.transition.end.x =      o.settings.transition.end.x * 0.01;
+          o.settings.transition.end.y =      o.settings.transition.end.y * 0.01;
+          o.settings.transition.end.width =  o.settings.transition.end.width * 0.01;
+          o.settings.transition.end.height = o.settings.transition.end.height * 0.01;
+
+          // calculate transition deltas
+          o.settings.transition.delta = {
+            x: (o.settings.transition.end.x - o.settings.transition.start.x).toFixed(10),                  // percentage of width / made into a decimal
+            y: (o.settings.transition.end.y - o.settings.transition.start.y).toFixed(10),                  // percentage of height / made into a decimal
+            width: (o.settings.transition.end.width - o.settings.transition.start.width).toFixed(10),      // percentage of width
+            height: (o.settings.transition.end.height - o.settings.transition.start.height).toFixed(10),   // percentage of height
+            opacity: (o.settings.transition.end.opacity - o.settings.transition.start.opacity).toFixed(10) // 0 ~ 1
+          };
+
+
+
+
+
+
+          // o.ui.init(); should be called from a callback on img load
+        }, /// init
         resize: function () {
           // var first_img = o.slide[0].img;
           // this must be the wrong image to repaint with (most of the time)
           // so pick the correct image or replace with a 'paint' function that paints the right thing
-          
+
           o.display.updateSize();
           o.ui.resize();
-          
+
           // if not animating / transitioning then re-draw
           // and then draw the current state, cos changing width will wipe the canvas
           if (!o.state.animating) {
             //o.display.background.cx.drawImage(first_img.el, 0, 0, o.display.background.cv.width, o.display.background.cv.height);
-            
+
             // o.background.cx.drawImage(o.imgs[o.engine.looping.current].el, 0, 0, o.canvas.width, o.canvas.height);
-            
+
             o.display.paint();
           }
         },
         engine: { // (function () {
           // operate the looping and transitioning
-          looping: { 
+          looping: {
             current: 0,
             next : 1,
             timeout: null
@@ -137,11 +225,11 @@ var phh = phh || {};
             // loop to the next slide
             // optional argument can turn looping on or off
             // called by: init() callback, transition()
-  
+
             if (arguments.length) {
               o.state.looping = looping_flag;
             }
-  
+
             if (o.state.looping && !o.state.pause_while_ui_visible) {
               o.engine.inc();
               o.engine.pause();
@@ -149,14 +237,14 @@ var phh = phh || {};
           },
           fast_loop_restart: function () {
             // called by: processXY()
-            
+
             o.state.looping = true;
             o.engine.inc();
             o.engine.transition();
           },
           inc: function () {
             // increment current slide
-  
+
             o.engine.looping.next = o.engine.looping.current + 1;
             if (o.engine.looping.next >= o.slides.length) {
               o.engine.looping.next = 0;
@@ -164,7 +252,7 @@ var phh = phh || {};
           },
           dec: function () {
             // decrement current slide
-  
+
             o.engine.looping.next = o.engine.looping.current - 1;
             if (o.engine.looping.next < 0) {
               o.engine.looping.next = o.slides.length - 1;
@@ -172,7 +260,7 @@ var phh = phh || {};
           },
           pause: function () {
             // pause between transitions
-  
+
             clearTimeout(o.engine.looping.timeout);
             o.engine.looping.timeout = setTimeout(function () {
               if (o.state.looping && !o.state.pause_while_ui_visible) {
@@ -183,15 +271,17 @@ var phh = phh || {};
           },
           transition: function () {
             var
-              transition_id, 
+              transition_id,
               transition_func,
-              start = Date.now ? Date.now() : +new Date,
+              start = Date.now ? Date.now() : +new Date, // = Date.now() || +new Date
               finish = start + o.settings.transition.duration;
-  
-            //if (o.state.animating) {phh.log('transition ERROR');} else {// phh.log('transition');}
-  
+              // +new Date == lteIE8 hack == create a new Date object and then cast it to a number using the unary + operator to call the internal ToNumber.
+            
+            // todo: remove this line when dev is finished
+            if (o.state.animating) {console.log('transition ERROR');}
+            
             o.state.animating = true;
-  
+
             transition_func = function () {
               var
                 current_time,
@@ -200,16 +290,16 @@ var phh = phh || {};
                 width,
                 height,
                 opacity;
-                
+
               current_time = (Date.now) ? Date.now() : +new Date;
               position = current_time > finish ? 1 : (current_time - start) / o.settings.transition.duration;
-  
+
               x = o.canvas.width * (o.settings.transition.start.x + (o.settings.transition.delta.x * position));
               y = o.canvas.height * (o.settings.transition.start.y + (o.settings.transition.delta.y * position));
               width =  o.canvas.width * (o.settings.transition.start.width + (o.settings.transition.delta.width * position));
               height = o.canvas.height * (o.settings.transition.start.height + (o.settings.transition.delta.height * position));
               opacity = o.settings.transition.start.opacity + (o.settings.transition.delta.opacity * position);
-  
+
               // retina / hi-dpi displays do not need to be integers, nor modern browsers with requestAnimationFrame
               if (!phh.test.shimRequestAnimationFrame) {
                 // bitwise math floor-truncation
@@ -217,24 +307,25 @@ var phh = phh || {};
                 y = ~~y;
                 width = ~~width;
                 height = ~~height;
-              }  
-              
-              // replace vars above with these obj props
-              o.display.foreground.opacity = opacity; 
-              o.display.foreground.x = x; 
+              }
+
+              // todo: replace vars above with these obj props
+              o.display.foreground.opacity = opacity;
+              o.display.foreground.x = x;
               o.display.foreground.y = y;
               o.display.foreground.cv.width = width;
               o.display.foreground.cv.height = height;
-              
+
               o.display.paint();
-              
+
               //o.context.globalAlpha = 1;
               //o.context.drawImage(o.imgs[o.looping.current].el, 0, 0, o.canvas.width, o.canvas.height);
               //o.context.globalAlpha = opacity;
               //o.context.drawImage(o.imgs[o.looping.next].el, x, y, width, height);
 
-  
+
               if (current_time > finish) {
+                // todo:
                 //if (phh.test.shimRequestAnimationFrame) {
                 //   window.cancelAnimationFrame(transition_id);
                 // } else {
@@ -249,43 +340,50 @@ var phh = phh || {};
                 }
               }
             };
-  
+
             if (phh.test.shimRequestAnimationFrame) {
               transition_func();
             } else {
               transition_id = setInterval(transition_func, 20);
             }
-          } // /transition      
-        },
+          } // /transition
+        }, /// engine
         // }()),
         display: {
-          init: function () {},
-          css: {},
+          init: function () {
+            // called by: o.init()
+
+            o.display.background.cv = $('canvas.' + the.prefs.slides_base_class, $wrapper)[0];
+            o.display.background.cx = o.display.background.cv.getContext("2d");
+            o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
+            o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
+          },
+          css: {}, // defined by: updateSize(), used by:
           updateSize: function () {
             var
               img,
               wrapper_width;
-  
+
             // img = o.imgs[0];
             img = o.slide[0].img;
-            
+
             wrapper_width = $wrapper.width();
-            
+
             // check in the code if these properties are used elsewhere
             //img.width = img.el.width;
             //img.height = img.el.height;
-  
+
             o.display.css = {
                 width: wrapper_width, // can assume it's already an integer
                 height: Math.round(wrapper_width * (img.el.height / img.el.width))
               };
-  
+
             // set canvas attributes (css * backing_scale)
             o.background.cv.width  = o.display.css.width  * o.backing_scale;
             o.background.cv.height = o.display.css.height * o.backing_scale;
             o.foreground.cv.width  = o.display.css.width  * o.backing_scale;
             o.foreground.cv.height = o.display.css.height * o.backing_scale;
-            
+
             $(o.background.cv).css(o.css);
             $(o.foreground.cv).css(o.css);
           },
@@ -293,63 +391,64 @@ var phh = phh || {};
             cv: null,
             cx: null//,
             // opacity: 0,
-            // x: 0, 
-            // y: 0, 
-            // width: null, 
+            // x: 0,
+            // y: 0,
+            // width: null,
             // height: null
           },
           foreground: {
             cv: null,
             cx: null,
             opacity: 0,
-            x: 0, 
-            y: 0, 
-            width: null, 
+            x: 0,
+            y: 0,
+            width: null,
             height: null
           },
           paint: function () {
-            
+
             /*o.display.background.cx.drawImage(
-              o.imgs[o.engine.looping.current].el, 
-              0, 
-              0, 
-              o.display.background.cv.width, 
+              o.imgs[o.engine.looping.current].el,
+              0,
+              0,
+              o.display.background.cv.width,
               o.display.background.cv.height
               );
             */
             // o.foreground.cx.drawImage(o.imgs[o.engine.looping.current].el, 0, 0, o.foreground.cv.width, o.foreground.cv.height);
-            
+
             o.display.background.cx.globalAlpha = 1;
             o.display.background.cx.drawImage(
-              o.slides[o.engine.looping.current].img.el, 
-              0, 
-              0, 
-              o.display.background.cv.width, 
+              o.slides[o.engine.looping.current].img.el,
+              0,
+              0,
+              o.display.background.cv.width,
               o.display.background.cv.height
               );
-            
+
+            // todo:
             // keep working system until we swap out for double canvases
             o.display.background.cx.globalAlpha = o.display.foreground.opacity;
             o.display.background.cx.drawImage(
-              o.slides[o.engine.looping.next].img.el, 
-              o.display.foreground.x, 
-              o.display.foreground.y, 
-              o.display.foreground.cv.width, 
+              o.slides[o.engine.looping.next].img.el,
+              o.display.foreground.x,
+              o.display.foreground.y,
+              o.display.foreground.cv.width,
               o.display.foreground.cv.height
               );
-            /*  
+            /*
             o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
             o.display.foreground.cx.drawImage(
-              o.slides[o.looping.next].img.el, 
-              o.display.foreground.x, 
-              o.display.foreground.y, 
-              o.display.foreground.cv.width, 
+              o.slides[o.looping.next].img.el,
+              o.display.foreground.x,
+              o.display.foreground.y,
+              o.display.foreground.cv.width,
               o.display.foreground.cv.height
-              );  
-            */  
-              
+              );
+            */
+
           }
-        },
+        }, /// display
         ui: (function () {
           var
             _ui,
@@ -376,7 +475,7 @@ var phh = phh || {};
             icon: {},
             chrome: {
               footer: null, // img_data
-              
+
               // x:
               // y:
               // static: img_data
@@ -391,24 +490,49 @@ var phh = phh || {};
               cx: null,
               footer: function () {},
               buttons: function () {},
-              scaleIcons: function (icons) {},          
+              scaleIcons: function (icons) {},
               cutIcon: function (cx, icon) {},
               cutStaticButton: function (cv, cx, icon) {},
               cutHoverButton: function (cx, icon, half_height, fill_style) {},
               darkenIcon: function (cx, icon, fill_style) {}
             },
-            addHandlers: function () {}
+            addHandlers: function () {
+              _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
+              _ui.cv.addEventListener("touchmove",   ui.touch.move,   false);
+              _ui.cv.addEventListener("touchend",    ui.touch.end,    false);
+              _ui.cv.addEventListener("touchcancel", ui.touch.cancel, false);
+
+              // standards
+              _ui.cv.addEventListener("mouseover",   ui.mouse.over,   false);
+              _ui.cv.addEventListener("mouseout",    ui.mouse.out,    false);
+              _ui.cv.addEventListener("mousemove",   ui.mouse.move,   false);
+              _ui.cv.addEventListener("mousedown",   ui.mouse.down,   false);
+              _ui.cv.addEventListener("mouseup",     ui.mouse.up,     false);
+
+              // microsoft
+              _ui.cv.addEventListener("mouseenter",  ui.mouse.over,  false);
+              _ui.cv.addEventListener("mouseleave",  ui.mouse.out,  false);
+            }
           };
           ui = {
-            footer_height: 40,
+            footer_height: 40, // todo: move this to settings?
             init: function () {
               // runs once only
-              
+              // called by callback on first image load
+
+              _ui.cv = $('canvas.' +the.prefs.slides_ui_class, $wrapper)[0];
+              _ui.cx = _ui.cv.getContext("2d");
+
               // scale up the button icons if hi-res or retina
               if (o.backing_scale !== 1) {
                 _ui.make.scaleIcons(_ui.icon);
               }
-              
+
+              _ui.addHandlers();
+
+
+
+
               // load o.settings.tilesheet
               // and fire callback once it's loaded
             },
@@ -421,7 +545,7 @@ var phh = phh || {};
             touch: {}
           };
           return ui;
-        }()),
+        }()), /// ui
         setBackingScale: function () {
           // assume that canvas & 2d context are supported
           // after test by magic_lantern.init()
@@ -438,33 +562,92 @@ var phh = phh || {};
 
           // calculate backing scale
           o.backing_scale = ((window.devicePixelRatio > 1) && !(o.backing_store_ratio > 1)) ? window.devicePixelRatio : 1;
-          
+
           cv = null; // will garbage collection destroy cv when function is finished?
-        }
-      };
+        } /// setBackingScale
+      }; /// o
 
       o.init();
+
+      // when first image loaded, do this:
+      phh.imgLoader([o.imgs[0]], function () {
+        var
+          first_img = o.slides[0].img;
+
+        o.display.updateSize();
+
+        // draw current state
+        o.display.background.cx.drawImage(
+          first_img.el,
+          0,
+          0,
+          o.display.background.cv.width,
+          o.display.background.cv.height
+          );
+
+        o.ui.init();
+
+        // call resize instead?
+        // and only draw current state if it IS animating? (cos then method would skip it)
+      });
+
+
+      // when all images loaded, do this:
+      phh.imgLoader(o.imgs, function () {
+        // set a timer for animation start
+        // when time is up check that all images have loaded
+        // if not then start animation when all images have loaded
+        // when all images have loaded
+
+
+        // phh.log('all loaded callback');
+        // var date = Date.now ? Date.now() : +new Date; // lte IE8, unary + operator == valueOf
+        // the.dateNow = Date.now || function() { return +new Date; };
+
+        o.engine.looping.timeout = setTimeout(function () {
+          // uncalibrated rough first pause running after unknown everything loaded
+
+          // start animation
+          o.engine.loop(true); // the.loop(o, true);
+        }, o.settings.first_pause);
+      });
+
+
+      // watch out for window resize event, and adjust canvas accordingly
+      // <body onorientationchange="updateOrientation();">
+      // could this be added only once window has finished loading,
+      // and thus do a resize once if required at end of init?
+      // todo: need to check that the initialisation is not reliant on this callback - for browsers that do not trigger resize
+      $(window).load(function(){
+        $(window).resize(
+          (function (o) {
+            return function () {
+              o.resize();
+            };
+          }(o))
+        );
+      });
 
 
     }
   }; // /phh.magic_lantern
 
-  
+
   // move slideLoader into magic_lantern
   // or build imgs[] in parallel?
   phh.slideLoader = function (slide_array, all_loaded_callback) {
-    var 
+    var
       i,
       img_array = [],
       length = slide_array.length;
-    
+
     for (i = 0; i < length; i += 1) {
       img_array.push(slide_array[i].img);
     }
-    
+
     phh.imgLoader(img_array, all_loaded_callback);
   };
-  
+
   phh.imgLoader = function (img_array, all_loaded_callback) {
     // v 1.0
     // runs a callback when all images in array are loaded
@@ -579,5 +762,5 @@ var phh = phh || {};
     }
     return r;
   }());
-  
+
 }(jQuery));
