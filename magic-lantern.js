@@ -47,7 +47,11 @@ var phh = phh || {};
       window.msRequestAnimationFrame ||
       false;
   }());
-
+  
+  $(function () { // readyState
+    phh.init();
+  });
+  
   phh.init = function () {
     phh.magic_lantern.init();
   };
@@ -109,16 +113,18 @@ var phh = phh || {};
       $wrapper = $(slideshow_container);
       $wrapper.
         wrapInner('<canvas />'). // wrap contents of selector in canvas
-        addClass('slides').
-        addClass('slides-base'); // the.prefs.slides_base_class
-
+        addClass('slides');             
+      $('canvas', $wrapper).addClass(the.prefs.slides_base_class);
+       
       $('<canvas />').
-        addClass('slides-overlay'). // the.prefs.slides_overlay_class
+        addClass(the.prefs.slides_overlay_class).
         appendTo($wrapper);
       $('<canvas />').
-        addClass('slides-ui'). // the.prefs.slides_ui_class
+        addClass(the.prefs.slides_ui_class). 
         appendTo($wrapper);
-
+      
+      debugger;
+      
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
@@ -197,7 +203,7 @@ var phh = phh || {};
           // o.ui.init(); should be called from a callback on img load
         }, /// init
         resize: function () {
-          // var first_img = o.slide[0].img;
+          // var first_img = o.slides[0].img;
           // this must be the wrong image to repaint with (most of the time)
           // so pick the correct image or replace with a 'paint' function that paints the right thing
 
@@ -365,7 +371,7 @@ var phh = phh || {};
               wrapper_width;
 
             // img = o.imgs[0];
-            img = o.slide[0].img;
+            img = o.slides[0].img;
 
             wrapper_width = $wrapper.width();
 
@@ -478,7 +484,7 @@ var phh = phh || {};
 
               // x:
               // y:
-              // static: img_data
+              // plain: img_data
               // hover: img_data
               prev: {},
               next: {},
@@ -567,7 +573,206 @@ var phh = phh || {};
                 // take img data from make.canvas and store it ready for use
                 _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
               },
-              buttons: function () {},
+              button: {
+                button_height: 40,
+                gap_between_buttons: null,
+                edge_offset: null,               
+                icon: {
+                  prev: {
+                    width: 18, height: 17,
+                    arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
+                    centre: {}, adjust: {x: -2}
+                  },
+                  next: {
+                    width: 18, height: 17,
+                    arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
+                    centre: {}, adjust: {x: 2}
+                  },
+                  play: {
+                    width: 21, height: 21,
+                    arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
+                    centre: {}, adjust: {x: 3, y: -1}
+                  },
+                  pause: {
+                    width: 15, height: 21,
+                    arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
+                    centre: {}
+                  }
+                },
+                init: function () {
+                  this.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line 
+                  this.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
+                },
+                make: function () {
+                  var
+                    cv = _ui.make.cv,
+                    cx = _ui.make.cx,
+                    play_pause_width,
+                    one_third_width,
+                    centre_width,
+                    half_centre_width,
+                    half_height,
+                    gr, // gradient
+                    i,
+                    icon,
+                    x,
+                    y;                   
+                  //_ui.make.button.button_height
+                  //_ui.make.button.edge_offset
+                  //_ui.make.button.gap_between_buttons
+                  
+                  // make a copy of _ui.make.button.icon to resize, 
+                  // otherwise will distort with successive resizing
+                }
+              },
+              buttons: function () {
+                // creates and stores img data for control buttons: play, pause, prev, next
+                // called by: resize
+                //
+                // todo: would be good to move o.backing_scale calcs elsewhere so they only run once, and not on every resize
+                // lets shift code to button() and then rename as buttons
+                var
+                  cv = _ui.make.cv,
+                  cx = _ui.make.cx,
+                  gap_between_buttons,
+                  play_pause_width,
+                  one_third_width,
+                  centre_width,
+                  half_centre_width,
+                  half_height,
+                  edge_offset,
+                  button_height = 40,
+                  gr, // gradient
+                  i,
+                  icon,
+                  x,
+                  y;
+                var hovered_icon_fill_style = 'rgba(0, 0, 0, 0.2)'; // overlays, does not replace previous darkening
+                
+                gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line 
+                one_third_width = ~~(ui.cv.width / 3);  
+                centre_width = ui.cv.width - (one_third_width * 2);
+                play_pause_width = one_third_width - gap_between_buttons;
+                half_centre_width = ~~(centre_width / 2);
+                edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
+                cv.height = (o.backing_scale === 1) ? button_height : button_height * o.backing_scale;
+                half_height = ~~(cv.height / 2);
+                
+                // gradient
+                gr = cx.createLinearGradient(0, 0, 0, cv.height);
+                gr.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                gr.addColorStop(1, 'rgba(255, 255, 255, 1)');
+                
+                icon = {
+                  prev: {
+                    width: 18,
+                    height: 17,
+                    arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
+                    centre: {},
+                    adjust: {x: -2}
+                  },
+                  next: {
+                    width: 18,
+                    height: 17,
+                    arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
+                    centre: {},
+                    adjust: {x: 2}
+                  },
+                  play: {
+                    width: 21,
+                    height: 21,
+                    arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
+                    centre: {},
+                    adjust: {x: 3, y: -1}
+                  },
+                  pause: {
+                    width: 15,
+                    height: 21,
+                    arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
+                    centre: {}
+                  }
+                };
+                
+                // scale the icon coordinates to match backing scale
+                ui.make.scaleIcons(icon);
+   
+                icon.prev.centre.x = edge_offset;
+                icon.prev.centre.y = half_height;
+                icon.prev.x = icon.prev.centre.x - ~~(icon.prev.width / 2);
+                icon.prev.y = icon.prev.centre.y - ~~(icon.prev.height / 2);
+        
+                icon.next.centre.x = one_third_width - edge_offset;
+                icon.next.centre.y = half_height;
+                icon.next.x = icon.next.centre.x - ~~(icon.next.width / 2);
+                icon.next.y = icon.next.centre.y - ~~(icon.next.height / 2);
+        
+                icon.play.centre.x = half_centre_width;
+                icon.play.centre.y = half_height;
+                icon.play.x = ~~((centre_width - icon.play.width) / 2);
+                icon.play.y = icon.play.centre.y - ~~(icon.play.height / 2);
+        
+                icon.pause.centre.x = half_centre_width;
+                icon.pause.centre.y = half_height;
+                icon.pause.x = ~~((centre_width - icon.pause.width) / 2);
+                icon.pause.y = icon.pause.centre.y - ~~(icon.pause.height / 2);
+                
+                
+                // prev button
+                _ui.chrome.prev.x = 0;
+                _ui.chrome.prev.y = 0;
+                cv.width = play_pause_width; // sets correct width and resets canvas
+                cx.fillStyle = gr;            
+                _ui.make.cutStaticButton(cv, cx, icon.prev);
+                _ui.make.darkenIcon(cx, icon.prev);
+                _ui.chrome.prev.plain = cx.getImageData(0, 0, cv.width, cv.height);
+                
+                // prev hover
+                _ui.make.cutHoverButton(cx, icon.prev, half_height);
+                _ui.make.darkenIcon(cx, icon.prev, hovered_icon_fill_style);
+                _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
+        
+                // next button
+                _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
+                _ui.chrome.next.y = 0;
+                cv.width = play_pause_width;
+                cx.fillStyle = gr;        
+                _ui.make.cutStaticButton(cv, cx, icon.next);
+                _ui.make.darkenIcon(cx, icon.next);
+                _ui.chrome.next.plain = cx.getImageData(0, 0, cv.width, cv.height);
+                
+                // next hover
+                _ui.make.cutHoverButton(cx, icon.next, half_height);
+                _ui.make.darkenIcon(cx, icon.next, hovered_icon_fill_style);
+                _ui.chrome.next.hover = cx.getImageData(0, 0, cv.width, cv.height);
+                
+                // play / pause button
+                _ui.chrome.play.x = ui.chrome.pause.x = one_third_width;       
+                _ui.chrome.play.y = ui.chrome.pause.y = 0;
+                cv.width = centre_width; // sets correct width and resets canvas
+                cx.fillStyle = gr;
+        
+                // play
+                _ui.make.cutStaticButton(cv, cx, icon.play);
+                _ui.make.darkenIcon(cx, icon.play);
+                _ui.chrome.play.plain = cx.getImageData(0, 0, cv.width, cv.height);
+                
+                // play hover
+                _ui.make.cutHoverButton(cx, icon.play, half_height);
+                _ui.make.darkenIcon(cx, icon.play, hovered_icon_fill_style);
+                _ui.chrome.play.hover = cx.getImageData(0, 0, cv.width, cv.height);
+        
+                // pause
+                cv.width = centre_width; // sets correct width and resets canvas
+                cx.fillStyle = gr;
+                _ui.make.cutStaticButton(cv, cx, icon.pause);
+                _ui.make.darkenIcon(cx, icon.pause);
+                _ui.chrome.pause.plain = cx.getImageData(0, 0, cv.width, cv.height);
+                
+                // pause hover
+                _ui.make.cutHoverButton(cx, icon.pause, half_height);    
+                _ui.make.darkenIcon(cx, icon.pause, hovered_icon_fill_style);
+                _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);     
+              },
               scaleIcons: function (icons) {
                 // scale up icons when they need to match a backing scale > 1
                 // arguments: icons is an object, passed by reference
@@ -929,5 +1134,22 @@ var phh = phh || {};
     }
     return r;
   }());
+  
+  phh.getObjectValue = function (o) {
+    // returns the value of the object passed in as an argument
+    // rather than returning a reference to the object
+    var 
+      p, // property
+      r; // return object
+    
+    r = (o.constructor) ? new o.constructor() : {};          
+    for (p in o) {
+      if (o.hasOwnProperty(p)) {
+        // if the property is an array or an object then recurse
+        r[p] = (typeof o[p] === "object") ? phh.getObjectValue(o[p]) : o[p];
+      }        
+    }
+    return r;         
+  };  
 
 }(jQuery));
