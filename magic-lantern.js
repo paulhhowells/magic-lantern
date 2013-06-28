@@ -136,7 +136,7 @@ console.log('canvas_slideshow');
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 9000000, //8000,       // pause between transitions, milliseconds
+          pause : 16000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           }
@@ -558,10 +558,25 @@ console.log('_ui.paint');
 
               // draw footer
               //  footer bg
+              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+
               //  show / hide
 
+              // calc these on init / resize
+              var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
+              var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
 
-              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+              _ui.cx.drawImage(
+                  _ui.tilesheet.img,
+                  _ui.tilesheet.show.x,
+                  _ui.tilesheet.show.y,
+                  _ui.tilesheet.show.width,
+                  _ui.tilesheet.show.height,
+                  show_hide_x,
+                  show_hide_y,
+                  _ui.tilesheet.show.width,
+                  _ui.tilesheet.show.height
+                  );
 
 
 //console.log('/_ui.paint');
