@@ -148,7 +148,7 @@ console.log('canvas_slideshow');
         state: {
           pause_while_ui_visible: false, // was: ui.ui_visible_pause
           looping: false,
-          transitioning: false, // read by resize, written by transition()
+          transitioning: false // read by resize, written by transition()
           //current_slide: 0,
           //target_slide: 0
         },
