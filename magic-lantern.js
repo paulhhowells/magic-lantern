@@ -119,17 +119,17 @@ console.log('canvas_slideshow');
       $wrapper.
         wrapInner('<canvas/>'). // wrap contents of selector in canvas
         addClass('slides');
-        
+
       $('canvas', $wrapper).addClass(the.prefs.slides_base_class);
 
       $('<canvas />').
         addClass(the.prefs.slides_overlay_class).
         appendTo($wrapper);
-        
+
       $('<canvas />').
         addClass(the.prefs.slides_ui_class).
         appendTo($wrapper);
-        
+
       // $('<div />').addClass("C").appendTo($wrapper);
 
 
@@ -386,7 +386,7 @@ console.log('display.init');
             o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
             o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
 
-console.log('/display.init');
+//console.log('/display.init');
           },
           css: {}, // defined by: updateSize(), used by:
           updateSize: function () {
@@ -428,7 +428,7 @@ console.log('display.updateSize');
             $(o.display.background.cv).css(o.display.css);
             $(o.display.foreground.cv).css(o.display.css);
 
-console.log('/display.updateSize');
+//console.log('/display.updateSize');
           },
           background: {
             cv: null,
@@ -529,7 +529,11 @@ console.log(o.state.looping);
               //  play_pause
               //  next
               var image_data;
+
 console.log('_ui.paint');
+//debugger;
+
+
               // draw plain or hover according to state
               image_data = _ui.chrome.prev.plain;
               _ui.cx.putImageData(image_data, _ui.chrome.prev.x, _ui.chrome.prev.y);
@@ -556,9 +560,14 @@ console.log('_ui.paint');
               //  footer bg
               //  show / hide
 
-console.log('/_ui.paint');
+
+              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+
+
+//console.log('/_ui.paint');
             },
             tilesheet: {
+              ready: false,
               img: new Image(), // to load tilesheet into
               shadow: {
                 left:  {x: 144, y: 0, width: 5, height: 5},
@@ -670,7 +679,7 @@ console.log('make.footer');
 
                 // take img data from make.canvas and store it ready for use
                 _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
-console.log('/make.footer');
+//console.log('/make.footer');
               },
               button: {
                 defaults: {
@@ -709,7 +718,7 @@ console.log('/make.footer');
                   this.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                   this.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
                 },
-                make: function () {
+                calculate: function () {
                 // todo: rename, make.button.make is poor naming
                   var
                     cv = _ui.make.cv,
@@ -736,7 +745,7 @@ console.log('make.button');
                   // scale the icon coordinates to match backing scale
                   _ui.make.scaleIcons(icon);
 
-console.log('/make.button');
+//console.log('/make.button');
                 }
               },
               buttons: function () {
@@ -756,6 +765,7 @@ console.log('/make.button');
                   half_height,
                   edge_offset,
                   button_height = 40,
+                  buttons_y,
                   gr, // gradient
                   i,
                   icon,
@@ -766,18 +776,17 @@ console.log('/make.button');
 console.log('make.buttons()');
 
                 gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
-//console.log('?');
                 edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
-//console.log('?');
                 cv.height = (o.backing_scale === 1) ? button_height : button_height * o.backing_scale;
 
-//console.log('?');
                 one_third_width = ~~(_ui.cv.width / 3);
                 centre_width = _ui.cv.width - (one_third_width * 2);
                 play_pause_width = one_third_width - gap_between_buttons;
                 half_centre_width = ~~(centre_width / 2);
                 half_height = ~~(cv.height / 2);
-//console.log('? a');
+
+                buttons_y = o.display.background.cv.height - button_height;
+
                 // gradient
                 gr = cx.createLinearGradient(0, 0, 0, cv.height);
                 gr.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
@@ -813,11 +822,9 @@ console.log('make.buttons()');
                   }
                 };
 
-//console.log('? b');
-
                 // scale the icon coordinates to match backing scale
                 _ui.make.scaleIcons(icon);
-//console.log('? c');
+
                 icon.prev.centre.x = edge_offset;
                 icon.prev.centre.y = half_height;
                 icon.prev.x = icon.prev.centre.x - ~~(icon.prev.width / 2);
@@ -838,11 +845,9 @@ console.log('make.buttons()');
                 icon.pause.x = ~~((centre_width - icon.pause.width) / 2);
                 icon.pause.y = icon.pause.centre.y - ~~(icon.pause.height / 2);
 
-//console.log('? d');
-
                 // prev button
                 _ui.chrome.prev.x = 0;
-                _ui.chrome.prev.y = 0;
+                _ui.chrome.prev.y = buttons_y;
                 cv.width = play_pause_width; // sets correct width and resets canvas
                 cx.fillStyle = gr;
                 _ui.make.cutStaticButton(cv, cx, icon.prev);
@@ -856,7 +861,7 @@ console.log('make.buttons()');
 
                 // next button
                 _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
-                _ui.chrome.next.y = 0;
+                _ui.chrome.next.y = buttons_y;
                 cv.width = play_pause_width;
                 cx.fillStyle = gr;
                 _ui.make.cutStaticButton(cv, cx, icon.next);
@@ -870,7 +875,7 @@ console.log('make.buttons()');
 
                 // play / pause button
                 _ui.chrome.play.x = _ui.chrome.pause.x = one_third_width;
-                _ui.chrome.play.y = _ui.chrome.pause.y = 0;
+                _ui.chrome.play.y = _ui.chrome.pause.y = buttons_y;
                 cv.width = centre_width; // sets correct width and resets canvas
                 cx.fillStyle = gr;
 
@@ -896,7 +901,7 @@ console.log('make.buttons()');
                 _ui.make.darkenIcon(cx, icon.pause, hovered_icon_fill_style);
                 _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
 
-console.log('/make.buttons');
+//console.log('/make.buttons');
               },
               scaleIcons: function (icons) {
                 // scale up icons when they need to match a backing scale > 1
@@ -940,7 +945,7 @@ console.log('make.scaleIcons');
                 }
                 //}
 
-console.log('/make.scaleIcons');
+//console.log('/make.scaleIcons');
               },
               cutIcon: function (cx, icon) {
                 // cut an icon shape out of a shape drawn on the canvas
@@ -969,7 +974,7 @@ console.log('/make.scaleIcons');
 //console.log('/make.cutIcon');
               },
               cutStaticButton: function (cv, cx, icon) {
-console.log('cutStaticButton');
+//console.log('cutStaticButton');
                 cx.beginPath();
                 cx.rect(0, 0, cv.width, cv.height); // clockwise
                 _ui.make.cutIcon(cx, icon);
@@ -978,7 +983,7 @@ console.log('cutStaticButton');
               },
               cutHoverButton: function (cx, icon, half_height, fill_style) {
                 // arguments: fill_style is optional, defaults to white
-console.log('cutHoverButton');
+//console.log('cutHoverButton');
                 var radius = half_height - 2;
                 cx.fillStyle = fill_style || "#fff";
                 cx.beginPath();
@@ -988,7 +993,7 @@ console.log('cutHoverButton');
                 cx.closePath();
               },
               darkenIcon: function (cx, icon, fill_style) {
-console.log('darkenIcon');
+//console.log('darkenIcon');
                 // arguments: fill_style is optional
                 cx.fillStyle = fill_style || 'rgba(0, 0, 0, 0.4)';
                 cx.beginPath();
@@ -1034,7 +1039,7 @@ console.log('ui.init');
               _ui.cv = $('canvas.' +the.prefs.slides_ui_class, $wrapper)[0];
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
-              _ui.cv.height = o.display.background.cv.width + ui.footer_height;
+              _ui.cv.height = o.display.background.cv.height + ui.footer_height;
 
               // init() button / buttons
 
@@ -1045,12 +1050,13 @@ console.log('ui.init');
               // load in tilesheet, and run a callback to process it once it has loaded
               tilesheetLoaded = function () {
                 _ui.make.footer(); // makes footer from tilesheet source
+                _ui.tilesheet.ready = true;
 
                 // todo: should only paint if visible!
-                //_ui.paint();
+                _ui.paint();
 
-                // just for testing proto
-                $('.wrapper').append(_ui.make.cv);
+                // todo: remove this commented out line
+                // just for testing proto $('.wrapper').append(_ui.make.cv);
               };
               _ui.tilesheet.img = new Image();
               _ui.tilesheet.img.onload = tilesheetLoaded;
@@ -1059,6 +1065,7 @@ console.log('ui.init');
               // while perhaps waiting for tilesheet to load
 
               _ui.addHandlers();
+
             },
             resize: function () {
 console.log('ui.resize');
@@ -1119,20 +1126,7 @@ console.log('ui.resize');
         var
           first_img = o.slides[0].img;
 
-// console.log('imgLoader');
-// console.log(o.display.background);
-// console.log(o.display.background.cv);
-// console.log(o.display.background.cv.width);
-// console.log(o.display.background.cv.height);
-
-//debugger;
         o.display.updateSize();
-
-// console.log('imgLoader b');
-// console.log(o.display.background);
-// console.log(o.display.background.cv);
-// console.log(o.display.background.cv.width);
-// console.log(o.display.background.cv.height);
 
         // draw current state
         o.display.background.cx.drawImage(
