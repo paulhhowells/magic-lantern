@@ -136,7 +136,7 @@ console.log('canvas_slideshow');
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 16000, //8000,       // pause between transitions, milliseconds
+          pause : 4000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           }
@@ -301,7 +301,9 @@ console.log('transition');
             if (o.state.transitioning) {console.log('transition ERROR');}
 
             o.state.transitioning = true;
-
+            
+            o.display.background.paint();
+            
             transition_func = function () {
               var
                 current_time,
@@ -323,32 +325,14 @@ console.log('transition');
               // retina / hi-dpi displays do not need to be integers, nor modern browsers with requestAnimationFrame
               if (!phh.test.shimRequestAnimationFrame) {
                 // bitwise math floor-truncation
-                /*x = ~~x;
-                y = ~~y;
-                width = ~~width;
-                height = ~~height;
-                */
                 o.display.foreground.x = ~~o.display.foreground.x;
                 o.display.foreground.y = ~~o.display.foreground.y;
                 o.display.foreground.cv.width = ~~o.display.foreground.width;
                 o.display.foreground.cv.height = ~~o.display.foreground.height;
-
               }
 
-              // todo: replace vars above with these obj props
-              //o.display.foreground.opacity = opacity;
-              //o.display.foreground.x = x;
-              //o.display.foreground.y = y;
-              //o.display.foreground.cv.width = width;
-              //o.display.foreground.cv.height = height;
-
-              o.display.paint();
-
-              //o.context.globalAlpha = 1;
-              //o.context.drawImage(o.imgs[o.looping.current].el, 0, 0, o.canvas.width, o.canvas.height);
-              //o.context.globalAlpha = opacity;
-              //o.context.drawImage(o.imgs[o.looping.next].el, x, y, width, height);
-
+              // o.display.background.paint();
+              o.display.foreground.paint();
 
               if (current_time > finish) {
                 // todo:
@@ -358,6 +342,7 @@ console.log('transition');
                 clearInterval(transition_id);
                 // }
                 o.engine.looping.current = o.engine.looping.next;
+                o.display.background.paint();
                 o.state.transitioning = false;
                 o.engine.loop();
               } else {
@@ -383,10 +368,10 @@ console.log('display.init');
 
             o.display.background.cv = $('canvas.' + the.prefs.slides_base_class, $wrapper)[0];
             o.display.background.cx = o.display.background.cv.getContext("2d");
+            o.display.background.cx.globalAlpha = 1;
+            
             o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
             o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
-
-//console.log('/display.init');
           },
           css: {}, // defined by: updateSize(), used by:
           updateSize: function () {
@@ -409,7 +394,6 @@ console.log('display.updateSize');
 
 //console.log(img.el.width);
 //console.log(img.el.height);
-//debugger;
 
             o.display.css = {
                 width: wrapper_width, // can assume it's already an integer
@@ -422,22 +406,29 @@ console.log('display.updateSize');
             o.display.foreground.cv.width  = o.display.css.width  * o.backing_scale;
             o.display.foreground.cv.height = o.display.css.height * o.backing_scale;
 
-
-
-// debugger;
             $(o.display.background.cv).css(o.display.css);
             $(o.display.foreground.cv).css(o.display.css);
-
-//console.log('/display.updateSize');
           },
           background: {
             cv: null,
-            cx: null//,
+            cx: null,
             // opacity: 0,
             // x: 0,
             // y: 0,
             // width: null,
             // height: null
+            paint: function () {
+            
+console.log('paint current' + o.engine.looping.current);
+
+              o.display.background.cx.drawImage(
+                o.slides[o.engine.looping.current].img.el,
+                0,
+                0,
+                o.display.background.cv.width,
+                o.display.background.cv.height
+              );
+            }
           },
           foreground: {
             cv: null,
@@ -446,52 +437,26 @@ console.log('display.updateSize');
             x: 0,
             y: 0,
             width: null,
-            height: null
+            height: null,
+            paint: function () {
+console.log('paint next' + o.engine.looping.next);
+              o.display.foreground.cx.clearRect(0, 0, o.display.foreground.cv.width, o.display.foreground.cv.height);
+            
+              o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
+              o.display.foreground.cx.drawImage(
+                o.slides[o.engine.looping.next].img.el,
+                o.display.foreground.x,
+                o.display.foreground.y,
+                o.display.foreground.cv.width,
+                o.display.foreground.cv.height
+              );
+            }
           },
           paint: function () {
-
 console.log('o.display.paint');
 
-            /*o.display.background.cx.drawImage(
-              o.imgs[o.engine.looping.current].el,
-              0,
-              0,
-              o.display.background.cv.width,
-              o.display.background.cv.height
-              );
-            */
-            // o.foreground.cx.drawImage(o.imgs[o.engine.looping.current].el, 0, 0, o.foreground.cv.width, o.foreground.cv.height);
-
-            o.display.background.cx.globalAlpha = 1;
-            o.display.background.cx.drawImage(
-              o.slides[o.engine.looping.current].img.el,
-              0,
-              0,
-              o.display.background.cv.width,
-              o.display.background.cv.height
-              );
-
-            // todo:
-            // keep working system until we swap out for double canvases
-            o.display.background.cx.globalAlpha = o.display.foreground.opacity;
-            o.display.background.cx.drawImage(
-              o.slides[o.engine.looping.next].img.el,
-              o.display.foreground.x,
-              o.display.foreground.y,
-              o.display.foreground.cv.width,
-              o.display.foreground.cv.height
-              );
-            /*
-            o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
-            o.display.foreground.cx.drawImage(
-              o.slides[o.looping.next].img.el,
-              o.display.foreground.x,
-              o.display.foreground.y,
-              o.display.foreground.cv.width,
-              o.display.foreground.cv.height
-              );
-            */
-
+            o.display.background.paint();
+            o.display.foreground.paint();
           }
         }, /// display
         ui: (function () {
@@ -763,6 +728,27 @@ console.log('make.button');
 //console.log('/make.button');
                 }
               },
+              btns: (function () {
+                var 
+                  _defaults,
+                  _btns,
+                  btns;
+                
+                _defaults = {
+                  
+                };  
+                _btns = {
+                  
+                };
+                
+                btns = function () {
+                  
+                };
+                btns.init = function () {
+                  
+                };
+                return btns;
+              }()),
               buttons: function () {
                 // creates and stores img data for control buttons: play, pause, prev, next
                 // called by: resize
@@ -834,7 +820,8 @@ console.log('make.buttons()');
                     height: 21,
                     arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
                     centre: {}
-                  }
+                  },
+                  show_hide: {}
                 };
 
                 // scale the icon coordinates to match backing scale
@@ -927,7 +914,8 @@ console.log('make.buttons()');
                   button,
                   button_name,
                   i,
-                  i_loc;
+                  i_loc,
+                  length;
 
 console.log('make.scaleIcons');
 
@@ -950,7 +938,7 @@ console.log('make.scaleIcons');
                     }
 
                     if (icon.arr) {
-                      for (i = 0; i < icon.arr.length; i += 1) {
+                      for (i = 0, length = icon.arr.length; i < length; i += 1) {
                         i_loc = icon.arr[i];
                         i_loc[0] *= o.backing_scale;
                         i_loc[1] *= o.backing_scale;
@@ -969,7 +957,9 @@ console.log('make.scaleIcons');
                 var
                   i,
                   i_x, i_y,
-                  x, y;
+                  x, y,
+                  length;
+                  
 //console.log('make.cutIcon');
                 x = icon.x;
                 y = icon.y;
@@ -981,7 +971,7 @@ console.log('make.scaleIcons');
 
                 cx.moveTo(icon.x, icon.y);
 
-                for (i = 0; i < icon.arr.length; i += 1) {
+                for (i = 0, length = icon.arr.length; i < length; i += 1) {
                   i_x = x + icon.arr[i][0];
                   i_y = y + icon.arr[i][1];
                   cx.lineTo(i_x, i_y);
@@ -1206,9 +1196,9 @@ console.log('ui.resize');
     var
       i,
       img_array = [],
-      length = slide_array.length;
+      length;
 
-    for (i = 0; i < length; i += 1) {
+    for (i = 0, length = slide_array.length; i < length; i += 1) {
       img_array.push(slide_array[i].img);
     }
 
@@ -1229,7 +1219,7 @@ console.log('ui.resize');
     var
       i,
       i_img,
-      length = img_array.length,
+      length,
       unloaded_total = 0,
       all_loaded_callback_called = false,
       load_callback,
@@ -1250,7 +1240,7 @@ console.log('ui.resize');
     };
 
     // loop through all images & check if image is already loaded or cached
-    for (i = 0; i < length; i += 1) {
+    for (i = 0, length = img_array.length; i < length; i += 1) {
       i_img = img_array[i];
 
       // use an array of img elements, or jQuery object, or array of objects with .el properties
@@ -1334,13 +1324,20 @@ console.log('ui.resize');
     // v1.0
     // returns the value of the object passed in as an argument
     // rather than returning a reference to the object
-    // arguments: may be an object, or a property of the object (i.e. string, number, array etc.)
-    // not expecting a function as an argument
+    // arguments: o may be an object, or a property of the object (i.e. string, number, array etc.)
+    // but not expecting a function as an argument
+    // todo: include functions by reference
+    // todo: test in IE and firefox
     var
       p, // property
       r; // return object
-
-    r = (o.constructor) ? new o.constructor() : {};
+    
+    // if (phh.isArray(o)) {
+    //   r = [];
+    //} else {
+      r = (o.constructor) ? new o.constructor() : {};
+    //}
+    
     for (p in o) {
       if (o.hasOwnProperty(p)) {
         // if the property is an array or an object then recurse
@@ -1349,5 +1346,19 @@ console.log('ui.resize');
     }
     return r;
   };
+  
+  phh.isArray = (function () {
+    // v1.1
+    // usually could use jQuery function isArray
+    // have used memoization to avoid repeatedly defining toString
+    var toString = Object.prototype.toString;
+    
+    return function (t) {
+      return !!(toString.call(t) === "[object Array]");
+    };
+  }());
+
+
+
 
 }(jQuery));
