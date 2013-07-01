@@ -113,7 +113,7 @@ var phh = phh || {};
         $wrapper,
         THREESIXTY = (Math.PI / 180) * 360;
 
-console.log('canvas_slideshow');
+// console.log('canvas_slideshow');
 
       $wrapper = $(slideshow_container);
       $wrapper.
@@ -129,8 +129,6 @@ console.log('canvas_slideshow');
       $('<canvas />').
         addClass(the.prefs.slides_ui_class).
         appendTo($wrapper);
-
-      // $('<div />').addClass("C").appendTo($wrapper);
 
 
       o = {
@@ -205,12 +203,6 @@ console.log('o.init');
             opacity: (o.settings.transition.end.opacity - o.settings.transition.start.opacity).toFixed(10) // 0 ~ 1
           };
 
-
-
-
-
-// console.log('/o.init');
-
           // o.ui.init(); should be called from a callback on img load
         }, /// init
         resize: function () {
@@ -226,10 +218,6 @@ console.log('o.resize');
           // if not animating / transitioning then re-draw
           // and then draw the current state, cos changing width will wipe the canvas
           if (!o.state.transitioning) {
-            //o.display.background.cx.drawImage(first_img.el, 0, 0, o.display.background.cv.width, o.display.background.cv.height);
-
-            // o.background.cx.drawImage(o.imgs[o.engine.looping.current].el, 0, 0, o.canvas.width, o.canvas.height);
-
             o.display.paint();
           }
         },
@@ -595,7 +583,6 @@ console.log('_ui.make.init');
                   y_footer_tab;
 
 console.log('make.footer');
-//console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
 
                 // set dimensions and clear the make scratchpad canvas
                 cv.width = _ui.cv.width;
@@ -662,160 +649,6 @@ console.log('make.footer');
                 // take img data from make.canvas and store it ready for use
                 _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
               },
-/*
-              buttons: function () {
-                var
-                  cv = _ui.make.cv,
-                  cx = _ui.make.cx,
-                  gap_between_buttons,
-                  play_pause_width,
-                  one_third_width,
-                  centre_width,
-                  half_centre_width,
-                  half_height,
-                  edge_offset,
-                  button_height = 40,
-                  buttons_y,
-                  gr, // gradient
-                  i,
-                  icon,
-                  x,
-                  y;
-                var hovered_icon_fill_style = 'rgba(0, 0, 0, 0.2)'; // overlays, does not replace previous darkening
-
-console.log('make.buttons()');
-//console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
-
-                gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
-                edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
-                cv.height = (o.backing_scale === 1) ? button_height : button_height * o.backing_scale;
-
-                one_third_width = ~~(_ui.cv.width / 3);
-                centre_width = _ui.cv.width - (one_third_width * 2);
-                play_pause_width = one_third_width - gap_between_buttons;
-                half_centre_width = ~~(centre_width / 2);
-                half_height = ~~(cv.height / 2);
-
-                buttons_y = o.display.background.cv.height - button_height;
-
-                // gradient
-                gr = cx.createLinearGradient(0, 0, 0, cv.height);
-                gr.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
-                gr.addColorStop(1, 'rgba(255, 255, 255, 1)');
-
-                icon = {
-                  prev: {
-                    width: 18,
-                    height: 17,
-                    arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
-                    centre: {},
-                    adjust: {x: -2}
-                  },
-                  next: {
-                    width: 18,
-                    height: 17,
-                    arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
-                    centre: {},
-                    adjust: {x: 2}
-                  },
-                  play: {
-                    width: 21,
-                    height: 21,
-                    arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
-                    centre: {},
-                    adjust: {x: 3, y: -1}
-                  },
-                  pause: {
-                    width: 15,
-                    height: 21,
-                    arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
-                    centre: {}
-                  },
-                  show_hide: {}
-                };
-
-                // scale the icon coordinates to match backing scale
-                _ui.make.scaleIcons(icon);
-
-                icon.prev.centre.x = edge_offset;
-                icon.prev.centre.y = half_height;
-                icon.prev.x = icon.prev.centre.x - ~~(icon.prev.width / 2);
-                icon.prev.y = icon.prev.centre.y - ~~(icon.prev.height / 2);
-
-                icon.next.centre.x = one_third_width - edge_offset;
-                icon.next.centre.y = half_height;
-                icon.next.x = icon.next.centre.x - ~~(icon.next.width / 2);
-                icon.next.y = icon.next.centre.y - ~~(icon.next.height / 2);
-
-                icon.play.centre.x = half_centre_width;
-                icon.play.centre.y = half_height;
-                icon.play.x = ~~((centre_width - icon.play.width) / 2);
-                icon.play.y = icon.play.centre.y - ~~(icon.play.height / 2);
-
-                icon.pause.centre.x = half_centre_width;
-                icon.pause.centre.y = half_height;
-                icon.pause.x = ~~((centre_width - icon.pause.width) / 2);
-                icon.pause.y = icon.pause.centre.y - ~~(icon.pause.height / 2);
-
-                // prev button
-                _ui.chrome.prev.x = 0;
-                _ui.chrome.prev.y = buttons_y;
-                cv.width = play_pause_width; // sets correct width and resets canvas
-                cx.fillStyle = gr;
-                _ui.make.cutStaticButton(cv, cx, icon.prev);
-                _ui.make.darkenIcon(cx, icon.prev);
-                _ui.chrome.prev.plain = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // prev hover
-                _ui.make.cutHoverButton(cx, icon.prev, half_height);
-                _ui.make.darkenIcon(cx, icon.prev, hovered_icon_fill_style);
-                _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // next button
-                _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
-                _ui.chrome.next.y = buttons_y;
-                cv.width = play_pause_width;
-                cx.fillStyle = gr;
-                _ui.make.cutStaticButton(cv, cx, icon.next);
-                _ui.make.darkenIcon(cx, icon.next);
-                _ui.chrome.next.plain = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // next hover
-                _ui.make.cutHoverButton(cx, icon.next, half_height);
-                _ui.make.darkenIcon(cx, icon.next, hovered_icon_fill_style);
-                _ui.chrome.next.hover = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // play / pause button
-                _ui.chrome.play.x = _ui.chrome.pause.x = one_third_width;
-                _ui.chrome.play.y = _ui.chrome.pause.y = buttons_y;
-                cv.width = centre_width; // sets correct width and resets canvas
-                cx.fillStyle = gr;
-
-                // play
-                _ui.make.cutStaticButton(cv, cx, icon.play);
-                _ui.make.darkenIcon(cx, icon.play);
-                _ui.chrome.play.plain = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // play hover
-                _ui.make.cutHoverButton(cx, icon.play, half_height);
-                _ui.make.darkenIcon(cx, icon.play, hovered_icon_fill_style);
-                _ui.chrome.play.hover = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // pause
-                cv.width = centre_width; // sets correct width and resets canvas
-                cx.fillStyle = gr;
-                _ui.make.cutStaticButton(cv, cx, icon.pause);
-                _ui.make.darkenIcon(cx, icon.pause);
-                _ui.chrome.pause.plain = cx.getImageData(0, 0, cv.width, cv.height);
-
-                // pause hover
-                _ui.make.cutHoverButton(cx, icon.pause, half_height);
-                _ui.make.darkenIcon(cx, icon.pause, hovered_icon_fill_style);
-                _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
-
-//console.log('/make.buttons');
-              },
-*/
               buttons: (function () {
                 // creates and stores img data for control buttons: play, pause, prev, next
                 // called by: resize
@@ -823,7 +656,7 @@ console.log('make.buttons()');
                 var
                   _defaults,
                   _buttons,
-                  buttons;
+                  f;
 
                 _defaults = {
                   button_height: 40,
@@ -860,7 +693,7 @@ console.log('make.buttons()');
                   button_height: null
                 };
 
-                buttons = function () {
+                f = function () {
                   var
                     cv = _ui.make.cv,
                     cx = _ui.make.cx,
@@ -871,11 +704,6 @@ console.log('make.buttons()');
                     half_height,
                     buttons_y,
                     gr; // gradient
-
-                  // make a copy of the value of _ui.make.button.icon to resize, otherwise will distort with successive resizing
-                  //icon = phh.getObjectValue(_ui.make.defaults.button.icon);
-                  // scale the icon coordinates to match backing scale
-                  //_ui.make.scaleIcons(icon);
 
                   cv.height = _buttons.button_height;
                   one_third_width = ~~(_ui.cv.width / 3);
@@ -967,7 +795,7 @@ console.log('make.buttons()');
                   _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
                 };
 
-                buttons.init = function () {
+                f.init = function () {
 console.log('buttons.init');
                   _buttons.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                   _buttons.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
@@ -979,7 +807,7 @@ console.log('buttons.init');
                   }
                   _buttons.icon = _defaults.icon;
                 };
-                return buttons;
+                return f;
               }()),
               scaleIcons: function (icons) {
                 // scale up icons when they need to match a backing scale > 1
@@ -1023,7 +851,7 @@ console.log('make.scaleIcons');
                   }
                 }
                 //}
-                
+
                 return icons; // returns reference not value!
 //console.log('/make.scaleIcons');
               },
@@ -1123,8 +951,6 @@ console.log('ui.init');
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
 
-              // init() button / buttons
-
               _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
 
               // load o.settings.tilesheet
@@ -1147,11 +973,9 @@ console.log('ui.init');
               // while perhaps waiting for tilesheet to load
 
               _ui.addHandlers();
-
             },
             resize: function () {
 // console.log('ui.resize');
-// console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
 
               // o.resizeCanvas used to call these
               // o.ui.calculateSizes();
@@ -1232,7 +1056,6 @@ console.log('ui.init');
         // and only draw current state if it IS animating? (cos then method would skip it)
       });
 
-
       // when all images loaded, do this:
       phh.imgLoader(o.imgs, function () {
         // set a timer for animation start
@@ -1252,7 +1075,6 @@ console.log('ui.init');
           o.engine.loop(true); // the.loop(o, true);
         }, o.settings.first_pause);
       });
-
 
       // watch out for window resize event, and adjust canvas accordingly
       // <body onorientationchange="updateOrientation();">
@@ -1441,8 +1263,5 @@ console.log('ui.init');
       return !!(toString.call(t) === "[object Array]");
     };
   }());
-
-
-
 
 }(jQuery));
