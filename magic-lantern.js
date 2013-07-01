@@ -381,18 +381,15 @@ console.log('display.init');
             // this === o.display
 
 console.log('display.updateSize');
-console.log(' I o.display.background.cv.width: ' + o.display.background.cv.width);
 
             // img = o.imgs[0];
             img = o.slides[0].img;
 
             wrapper_width = $wrapper.width();
 
-
-            // check in the code if these properties are used elsewhere
+            // todo: check in the code if these properties are used elsewhere
             //img.width = img.el.width;
             //img.height = img.el.height;
-
 //console.log(img.el.width);
 //console.log(img.el.height);
 
@@ -409,8 +406,6 @@ console.log(' I o.display.background.cv.width: ' + o.display.background.cv.width
 
             $(o.display.background.cv).css(o.display.css);
             $(o.display.foreground.cv).css(o.display.css);
-            
-console.log('II o.display.background.cv.width: ' + o.display.background.cv.width);
           },
           background: {
             cv: null,
@@ -422,6 +417,7 @@ console.log('II o.display.background.cv.width: ' + o.display.background.cv.width
             // height: null
             paint: function () {
 // console.log('paint current' + o.engine.looping.current);
+              // this == o.display.background
 
               o.display.background.cx.drawImage(
                 o.slides[o.engine.looping.current].img.el,
@@ -442,6 +438,7 @@ console.log('II o.display.background.cv.width: ' + o.display.background.cv.width
             height: null,
             paint: function () {
 // console.log('paint next' + o.engine.looping.next);
+              // this == o.display.foreground
               o.display.foreground.cx.clearRect(0, 0, o.display.foreground.cv.width, o.display.foreground.cv.height);
 
               o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
@@ -532,7 +529,7 @@ console.log('_ui.paint');
               // calc these on init / resize
               var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
               var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
-              
+
               _ui.cx.drawImage(
                   _ui.tilesheet.img,
                   _ui.tilesheet.show.x,
@@ -577,8 +574,11 @@ console.log('_ui.paint');
               cx: null,
               init: function () {
 console.log('_ui.make.init');
+                // this == _ui.make
                 this.cv = document.createElement('canvas');
                 this.cx = this.cv.getContext('2d');
+
+                this.buttons.init();
               },
               footer: function () {
                 // make footer background
@@ -661,102 +661,9 @@ console.log('make.footer');
 
                 // take img data from make.canvas and store it ready for use
                 _ui.chrome.footer = cx.getImageData(0, 0, cv.width, cv.height);
-//console.log('/make.footer');
               },
-              button: {
-                defaults: {
-                  button_height: 40,
-                  edge_offset: 45,
-                  hovered_icon_fill_style: 'rgba(0, 0, 0, 0.2)',
-
-                  // todo: should this be here, or use _ui.icon? the icons are specific to the buttons!
-                  icon: {
-                    prev: {
-                      width: 18, height: 17,
-                      arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
-                      centre: {}, adjust: {x: -2}
-                    },
-                    next: {
-                      width: 18, height: 17,
-                      arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
-                      centre: {}, adjust: {x: 2}
-                    },
-                    play: {
-                      width: 21, height: 21,
-                      arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
-                      centre: {}, adjust: {x: 3, y: -1}
-                    },
-                    pause: {
-                      width: 15, height: 21,
-                      arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
-                      centre: {}
-                    }
-                  }
-                },
-                gap_between_buttons: null,
-                edge_offset: null,
-                button_height: null,
-                init: function () {
-                  this.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
-                  this.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
-                },
-                calculate: function () {
-                // todo: rename, make.button.make is poor naming
-                  var
-                    cv = _ui.make.cv,
-                    cx = _ui.make.cx,
-                    play_pause_width,
-                    one_third_width,
-                    centre_width,
-                    half_centre_width,
-                    half_height,
-                    gr, // gradient
-                    i,
-                    icon,
-                    x,
-                    y;
-                  //_ui.make.button.defaults.button_height
-                  //_ui.make.button.defaults.edge_offset
-                  //_ui.make.button.defaults.gap_between_buttons
-
-console.log('make.button');
-
-                  // make a copy of the value of _ui.make.button.icon to resize, otherwise will distort with successive resizing
-                  icon = phh.getObjectValue(_ui.make.defaults.button.icon);
-
-                  // scale the icon coordinates to match backing scale
-                  _ui.make.scaleIcons(icon);
-
-//console.log('/make.button');
-                }
-              },
-              btns: (function () {
-                var
-                  _defaults,
-                  _btns,
-                  btns;
-
-                _defaults = {
-
-                };
-                _btns = {
-
-                };
-
-                btns = function () {
-
-                };
-                btns.init = function () {
-
-                };
-                return btns;
-              }()),
+/*
               buttons: function () {
-                // creates and stores img data for control buttons: play, pause, prev, next
-                // called by: resize
-                //
-                // todo: would be good to move o.backing_scale calcs elsewhere so they only run once, and not on every resize
-                // lets shift code to button() and then rename as buttons
                 var
                   cv = _ui.make.cv,
                   cx = _ui.make.cx,
@@ -908,6 +815,172 @@ console.log('make.buttons()');
 
 //console.log('/make.buttons');
               },
+*/
+              buttons: (function () {
+                // creates and stores img data for control buttons: play, pause, prev, next
+                // called by: resize
+                // notes: _defaults.icon is only scaled once (by init) so there is no need to clone it and move it into _buttons
+                var
+                  _defaults,
+                  _buttons,
+                  buttons;
+
+                _defaults = {
+                  button_height: 40,
+                  edge_offset: 45,
+                  hovered_icon_fill_style: 'rgba(0, 0, 0, 0.2)',
+                  icon: { // todo: should this be here, or use _ui.icon? the icons are specific to the buttons!
+                    prev: {
+                      width: 18, height: 17,
+                      arr: [[18, 0], [0, 8.5], [18, 17],  [18, 11], [13, 8.5], [18, 6], [18, 0]],
+                      centre: {}, adjust: {x: -2}
+                    },
+                    next: {
+                      width: 18, height: 17,
+                      arr: [[0, 0], [0, 6], [5, 8.5], [0, 11], [0, 17], [18, 8.5], [0, 0]],
+                      centre: {}, adjust: {x: 2}
+                    },
+                    play: {
+                      width: 21, height: 21,
+                      arr: [[0, 0], [0, 21], [21, 11.5], [0, 0]],
+                      centre: {}, adjust: {x: 3, y: -1}
+                    },
+                    pause: {
+                      width: 15, height: 21,
+                      arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
+                      centre: {}
+                    },
+                    show_hide: {}
+                  }
+                };
+
+                _buttons = {
+                  gap_between_buttons: null,
+                  edge_offset: null,
+                  button_height: null
+                };
+
+                buttons = function () {
+                  var
+                    cv = _ui.make.cv,
+                    cx = _ui.make.cx,
+                    play_pause_width,
+                    one_third_width,
+                    centre_width,
+                    half_centre_width,
+                    half_height,
+                    buttons_y,
+                    gr; // gradient
+
+                  // make a copy of the value of _ui.make.button.icon to resize, otherwise will distort with successive resizing
+                  //icon = phh.getObjectValue(_ui.make.defaults.button.icon);
+                  // scale the icon coordinates to match backing scale
+                  //_ui.make.scaleIcons(icon);
+
+                  cv.height = _buttons.button_height;
+                  one_third_width = ~~(_ui.cv.width / 3);
+                  centre_width = _ui.cv.width - (one_third_width * 2);
+                  play_pause_width = one_third_width - _buttons.gap_between_buttons;
+                  half_centre_width = ~~(centre_width / 2);
+                  half_height = ~~(cv.height / 2);
+                  buttons_y = o.display.background.cv.height - _buttons.button_height;
+
+                  // define gradient
+                  gr = cx.createLinearGradient(0, 0, 0, cv.height);
+                  gr.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+                  gr.addColorStop(1, 'rgba(255, 255, 255, 1)');
+
+                  _buttons.icon.prev.centre.x = _buttons.edge_offset;
+                  _buttons.icon.prev.centre.y = half_height;
+                  _buttons.icon.prev.x = _buttons.icon.prev.centre.x - ~~(_buttons.icon.prev.width / 2);
+                  _buttons.icon.prev.y = _buttons.icon.prev.centre.y - ~~(_buttons.icon.prev.height / 2);
+
+                  _buttons.icon.next.centre.x = one_third_width - _buttons.edge_offset;
+                  _buttons.icon.next.centre.y = half_height;
+                  _buttons.icon.next.x = _buttons.icon.next.centre.x - ~~(_buttons.icon.next.width / 2);
+                  _buttons.icon.next.y = _buttons.icon.next.centre.y - ~~(_buttons.icon.next.height / 2);
+
+                  _buttons.icon.play.centre.x = half_centre_width;
+                  _buttons.icon.play.centre.y = half_height;
+                  _buttons.icon.play.x = ~~((centre_width - _buttons.icon.play.width) / 2);
+                  _buttons.icon.play.y = _buttons.icon.play.centre.y - ~~(_buttons.icon.play.height / 2);
+
+                  _buttons.icon.pause.centre.x = half_centre_width;
+                  _buttons.icon.pause.centre.y = half_height;
+                  _buttons.icon.pause.x = ~~((centre_width - _buttons.icon.pause.width) / 2);
+                  _buttons.icon.pause.y = _buttons.icon.pause.centre.y - ~~(_buttons.icon.pause.height / 2);
+
+                  // prev button
+                  _ui.chrome.prev.x = 0;
+                  _ui.chrome.prev.y = buttons_y;
+                  cv.width = play_pause_width; // sets correct width and resets canvas
+                  cx.fillStyle = gr;
+                  _ui.make.cutStaticButton(cv, cx, _buttons.icon.prev);
+                  _ui.make.darkenIcon(cx, _buttons.icon.prev);
+                  _ui.chrome.prev.plain = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // prev hover
+                  _ui.make.cutHoverButton(cx, _buttons.icon.prev, half_height);
+                  _ui.make.darkenIcon(cx, _buttons.icon.prev, _defaults.hovered_icon_fill_style);
+                  _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // next button
+                  _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
+                  _ui.chrome.next.y = buttons_y;
+                  cv.width = play_pause_width;
+                  cx.fillStyle = gr;
+                  _ui.make.cutStaticButton(cv, cx, _buttons.icon.next);
+                  _ui.make.darkenIcon(cx, _buttons.icon.next);
+                  _ui.chrome.next.plain = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // next hover
+                  _ui.make.cutHoverButton(cx, _buttons.icon.next, half_height);
+                  _ui.make.darkenIcon(cx, _buttons.icon.next, _defaults.hovered_icon_fill_style);
+                  _ui.chrome.next.hover = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // play / pause button
+                  _ui.chrome.play.x = _ui.chrome.pause.x = one_third_width;
+                  _ui.chrome.play.y = _ui.chrome.pause.y = buttons_y;
+                  cv.width = centre_width; // sets correct width and resets canvas
+                  cx.fillStyle = gr;
+
+                  // play
+                  _ui.make.cutStaticButton(cv, cx, _buttons.icon.play);
+                  _ui.make.darkenIcon(cx, _buttons.icon.play);
+                  _ui.chrome.play.plain = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // play hover
+                  _ui.make.cutHoverButton(cx, _buttons.icon.play, half_height);
+                  _ui.make.darkenIcon(cx, _buttons.icon.play, _defaults.hovered_icon_fill_style);
+                  _ui.chrome.play.hover = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // pause
+                  cv.width = centre_width; // sets correct width and resets canvas
+                  cx.fillStyle = gr;
+                  _ui.make.cutStaticButton(cv, cx, _buttons.icon.pause);
+                  _ui.make.darkenIcon(cx, _buttons.icon.pause);
+                  _ui.chrome.pause.plain = cx.getImageData(0, 0, cv.width, cv.height);
+
+                  // pause hover
+                  _ui.make.cutHoverButton(cx, _buttons.icon.pause, half_height);
+                  _ui.make.darkenIcon(cx, _buttons.icon.pause, _defaults.hovered_icon_fill_style);
+                  _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
+                };
+
+                buttons.init = function () {
+console.log('buttons.init');
+                  _buttons.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
+                  _buttons.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
+                  _buttons.button_height = (o.backing_scale === 1) ? _defaults.button_height : _defaults.button_height * o.backing_scale;
+
+                  // scale the icon coordinates to match backing scale
+                  if (o.backing_scale !== 1) {
+                    _ui.make.scaleIcons(_defaults.icon);
+                  }
+                  _buttons.icon = _defaults.icon;
+                };
+                return buttons;
+              }()),
               scaleIcons: function (icons) {
                 // scale up icons when they need to match a backing scale > 1
                 // arguments: icons is an object, passed by reference
@@ -950,7 +1023,8 @@ console.log('make.scaleIcons');
                   }
                 }
                 //}
-
+                
+                return icons; // returns reference not value!
 //console.log('/make.scaleIcons');
               },
               cutIcon: function (cx, icon) {
@@ -1082,19 +1156,19 @@ console.log('ui.init');
               // o.resizeCanvas used to call these
               // o.ui.calculateSizes();
               // o.ui.paint();
-              
+
               // need to reset dimensions, but also to clear the canvas before painting (which is a byproduct of setting dims)
               // do this before make.buttons and/or make.footer due to a dependency one (or both) of them has
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
-              
-              
+
+
               // could there be a race condition where this runs before ui.init() ?
               // dont want to make buttons or footer if there could be!
               // todo: test for this
               _ui.make.buttons();
               _ui.make.footer();
-   
+
               _ui.paint();
             },
             mouse: {
