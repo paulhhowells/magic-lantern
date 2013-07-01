@@ -136,7 +136,7 @@ console.log('canvas_slideshow');
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 4000, //8000,       // pause between transitions, milliseconds
+          pause : 40000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           }
@@ -209,7 +209,7 @@ console.log('o.init');
 
 
 
-console.log('/o.init');
+// console.log('/o.init');
 
           // o.ui.init(); should be called from a callback on img load
         }, /// init
@@ -289,7 +289,7 @@ console.log('o.resize');
             }, o.settings.pause);
           },
           transition: function () {
-console.log('transition');
+// console.log('transition');
             var
               transition_id,
               transition_func,
@@ -301,9 +301,9 @@ console.log('transition');
             if (o.state.transitioning) {console.log('transition ERROR');}
 
             o.state.transitioning = true;
-            
+
             o.display.background.paint();
-            
+
             transition_func = function () {
               var
                 current_time,
@@ -369,7 +369,7 @@ console.log('display.init');
             o.display.background.cv = $('canvas.' + the.prefs.slides_base_class, $wrapper)[0];
             o.display.background.cx = o.display.background.cv.getContext("2d");
             o.display.background.cx.globalAlpha = 1;
-            
+
             o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
             o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
           },
@@ -381,6 +381,7 @@ console.log('display.init');
             // this === o.display
 
 console.log('display.updateSize');
+console.log(' I o.display.background.cv.width: ' + o.display.background.cv.width);
 
             // img = o.imgs[0];
             img = o.slides[0].img;
@@ -408,6 +409,8 @@ console.log('display.updateSize');
 
             $(o.display.background.cv).css(o.display.css);
             $(o.display.foreground.cv).css(o.display.css);
+            
+console.log('II o.display.background.cv.width: ' + o.display.background.cv.width);
           },
           background: {
             cv: null,
@@ -418,8 +421,7 @@ console.log('display.updateSize');
             // width: null,
             // height: null
             paint: function () {
-            
-console.log('paint current' + o.engine.looping.current);
+// console.log('paint current' + o.engine.looping.current);
 
               o.display.background.cx.drawImage(
                 o.slides[o.engine.looping.current].img.el,
@@ -439,9 +441,9 @@ console.log('paint current' + o.engine.looping.current);
             width: null,
             height: null,
             paint: function () {
-console.log('paint next' + o.engine.looping.next);
+// console.log('paint next' + o.engine.looping.next);
               o.display.foreground.cx.clearRect(0, 0, o.display.foreground.cv.width, o.display.foreground.cv.height);
-            
+
               o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
               o.display.foreground.cx.drawImage(
                 o.slides[o.engine.looping.next].img.el,
@@ -453,7 +455,7 @@ console.log('paint next' + o.engine.looping.next);
             }
           },
           paint: function () {
-console.log('o.display.paint');
+// console.log('o.display.paint');
 
             o.display.background.paint();
             o.display.foreground.paint();
@@ -530,7 +532,7 @@ console.log('_ui.paint');
               // calc these on init / resize
               var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
               var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
-
+              
               _ui.cx.drawImage(
                   _ui.tilesheet.img,
                   _ui.tilesheet.show.x,
@@ -542,7 +544,6 @@ console.log('_ui.paint');
                   _ui.tilesheet.show.width,
                   _ui.tilesheet.show.height
                   );
-
 
 //console.log('/_ui.paint');
             },
@@ -594,6 +595,7 @@ console.log('_ui.make.init');
                   y_footer_tab;
 
 console.log('make.footer');
+//console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
 
                 // set dimensions and clear the make scratchpad canvas
                 cv.width = _ui.cv.width;
@@ -729,23 +731,23 @@ console.log('make.button');
                 }
               },
               btns: (function () {
-                var 
+                var
                   _defaults,
                   _btns,
                   btns;
-                
+
                 _defaults = {
-                  
-                };  
-                _btns = {
-                  
+
                 };
-                
+                _btns = {
+
+                };
+
                 btns = function () {
-                  
+
                 };
                 btns.init = function () {
-                  
+
                 };
                 return btns;
               }()),
@@ -775,6 +777,7 @@ console.log('make.button');
                 var hovered_icon_fill_style = 'rgba(0, 0, 0, 0.2)'; // overlays, does not replace previous darkening
 
 console.log('make.buttons()');
+//console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
 
                 gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                 edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
@@ -959,7 +962,7 @@ console.log('make.scaleIcons');
                   i_x, i_y,
                   x, y,
                   length;
-                  
+
 //console.log('make.cutIcon');
                 x = icon.x;
                 y = icon.y;
@@ -1073,19 +1076,26 @@ console.log('ui.init');
 
             },
             resize: function () {
-console.log('ui.resize');
+// console.log('ui.resize');
+// console.log('o.display.background.cv.width: ' + o.display.background.cv.width);
+
               // o.resizeCanvas used to call these
               // o.ui.calculateSizes();
               // o.ui.paint();
-
+              
+              // need to reset dimensions, but also to clear the canvas before painting (which is a byproduct of setting dims)
+              // do this before make.buttons and/or make.footer due to a dependency one (or both) of them has
+              _ui.cv.width = o.display.background.cv.width;
+              _ui.cv.height = o.display.background.cv.height + ui.footer_height;
+              
+              
               // could there be a race condition where this runs before ui.init() ?
               // dont want to make buttons or footer if there could be!
               // todo: test for this
               _ui.make.buttons();
               _ui.make.footer();
-
-              // todo: should only paint if visible!
-              //_ui.paint();
+   
+              _ui.paint();
             },
             mouse: {
               over: function (ev) {},
@@ -1331,13 +1341,13 @@ console.log('ui.resize');
     var
       p, // property
       r; // return object
-    
+
     // if (phh.isArray(o)) {
     //   r = [];
     //} else {
       r = (o.constructor) ? new o.constructor() : {};
     //}
-    
+
     for (p in o) {
       if (o.hasOwnProperty(p)) {
         // if the property is an array or an object then recurse
@@ -1346,13 +1356,13 @@ console.log('ui.resize');
     }
     return r;
   };
-  
+
   phh.isArray = (function () {
     // v1.1
     // usually could use jQuery function isArray
     // have used memoization to avoid repeatedly defining toString
     var toString = Object.prototype.toString;
-    
+
     return function (t) {
       return !!(toString.call(t) === "[object Array]");
     };
