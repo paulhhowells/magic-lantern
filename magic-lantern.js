@@ -667,10 +667,7 @@ console.log('make.footer');
                   var
                     cv = _ui.make.cv,
                     cx = _ui.make.cx,
-
-                    //play_pause_width,
                     prev_next_width,
-
                     one_third_width,
                     centre_width,
                     half_centre_width,
@@ -829,14 +826,14 @@ console.log('make.footer');
 
 //console.log(_buttons.pad);
 //console.log('ht: ' + o.display.background.cv.height);
-                 
+
                   //_ui.touch_collider.register(_buttons.pad_collision.touch.prev);
                   //_ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
                   //_ui.touch_collider.register(_buttons.pad_collision.touch.next);
-                  
+
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
-                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);                 
+                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);
                 };
 
                 f.init = function () {
@@ -850,6 +847,8 @@ console.log('make.footer');
                     _ui.make.scaleIcons(_defaults.icon);
                   }
                   _buttons.icon = _defaults.icon;
+
+                  f.gap_between_buttons = _buttons.gap_between_buttons;
                 };
                 return f;
               }()),
@@ -963,34 +962,25 @@ console.log('make.scaleIcons');
 
 
 
-
             paint: function () {
               // draw controls
               //  prev
               //  play_pause
               //  next
-              var image_data;
-
 // console.log('_ui.paint');
-//debugger;
-              var chrome_state = {
-                prev: 'plain',
-                next: 'plain',
-                play_pause: 'plain',
-              };
-              var play_pause = (o.state.looping) ? 'pause' : 'play';
-              
+// console.log('paint _ui.last_collision: ' + _ui.last_collision);
+              var
+                chrome_state,
+                play_pause;
+
+              chrome_state = {
+                  prev: 'plain',
+                  next: 'plain',
+                  play_pause: 'plain',
+                };
+              play_pause = (o.state.looping) ? 'pause' : 'play';
+
               if (_ui.last_collision) {
-                var hover_name = _ui.last_collision;
-                
-                
-                
-
-
-                // debugger;
-                
-                
-                
                 switch (_ui.last_collision) {
                  case 'prev':
                    chrome_state.prev = 'hover';
@@ -999,28 +989,19 @@ console.log('make.scaleIcons');
                    chrome_state.next = 'hover';
                    break;
                  case 'play_pause':
-                   chrome_state.play_pause = 'hover'; 
+                   chrome_state.play_pause = 'hover';
                    break;
                  default:
-                }                
+                }
               }
-//debugger;
-
-console.log('paint _ui.last_collision: ' + _ui.last_collision);
-
 
               // draw plain or hover according to state
-              _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],        _ui.chrome.prev.x, _ui.chrome.prev.y);
-              _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],        _ui.chrome.next.x, _ui.chrome.next.y);
-              
-              
-              
-              _ui.cx.putImageData(_ui.chrome[play_pause][chrome_state.play_pause],  _ui.chrome.play.x, _ui.chrome.play.y);
-
+              _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],              _ui.chrome.prev.x, _ui.chrome.prev.y);
+              _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],              _ui.chrome.next.x, _ui.chrome.next.y);
+              _ui.cx.putImageData(_ui.chrome[play_pause][chrome_state.play_pause], _ui.chrome.play.x, _ui.chrome.play.y);
 
               // draw footer
               //  footer bg
-// console.log(_ui.chrome.footer);
               _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
 
               //  show / hide
@@ -1040,6 +1021,24 @@ console.log('paint _ui.last_collision: ' + _ui.last_collision);
                 _ui.tilesheet.show.width,
                 _ui.tilesheet.show.height
               );
+
+              // draw gaps between buttons
+              _ui.cx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+              _ui.cx.beginPath();
+              _ui.cx.rect(
+                _ui.chrome.play.x - _ui.make.buttons.gap_between_buttons,
+                _ui.chrome.play.y,
+                _ui.make.buttons.gap_between_buttons,
+                _ui.chrome.play.plain.height
+                );
+              _ui.cx.rect(
+                _ui.chrome.play.x + _ui.chrome.play.plain.width,
+                _ui.chrome.play.y,
+                _ui.make.buttons.gap_between_buttons,
+                _ui.chrome.play.plain.height
+                );
+              _ui.cx.fill();
+              _ui.cx.closePath();
             },
             processLoc: function (css_loc) {
               // called by: mouse.move() mouse.up() touch.end()
@@ -1076,7 +1075,7 @@ console.log('paint _ui.last_collision: ' + _ui.last_collision);
 
               // record collision string, or false if no collision occurred
               _ui.last_collision = collisions_str;
-              
+
 console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
 
 
@@ -1200,7 +1199,7 @@ console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.las
                 r.x = ~~(ev.pageX - offset.left);
                 r.y = ~~(ev.pageY - offset.top);
               }
-              
+
 // console.log('getMouseLoc: ' + r.x + ' ' + r.y);
 
               return r;
@@ -1627,7 +1626,7 @@ console.log('ui.init');
       return !!(toString.call(t) === "[object Array]");
     };
   }());
-  
+
   phh.collider = function () {
     // v.0.1
     //
