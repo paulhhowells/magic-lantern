@@ -10,7 +10,7 @@
   ConstructorClassNames
   css-class-names
 
-  _o private object, encapsulated within a closure
+  _o private or priviledged object, encapsulated within a closure
   o  return object
   r  return object
 
@@ -446,6 +446,22 @@ console.log('display.updateSize');
             o.display.foreground.paint();
           }
         }, /// display
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         ui: (function () {
           var
             _ui,
@@ -454,6 +470,17 @@ console.log('display.updateSize');
           _ui = {
             cv: null,
             cx: null,
+            mode: {
+              touched: null,
+              touchtype : '',
+              hovered: null,
+              mouse : '',
+              hover: false,
+              //ui_visible_pause: false
+            },
+            last_collision: null, // processLoc() paint()
+            touch_collider: null,
+            mouse_collider: null,
             show: function () {
               ui.visible = true;
               o.state.pause_while_ui_visible = true;
@@ -474,7 +501,6 @@ console.log(o.state.looping);
 
               o.engine.pause();
             },
-            getTouchLoc: function () {},
             paint: function () {
               // draw controls
               //  prev
@@ -697,7 +723,10 @@ console.log('make.footer');
                   var
                     cv = _ui.make.cv,
                     cx = _ui.make.cx,
+                    
                     play_pause_width,
+                    prev_next_width,
+                    
                     one_third_width,
                     centre_width,
                     half_centre_width,
@@ -709,6 +738,9 @@ console.log('make.footer');
                   one_third_width = ~~(_ui.cv.width / 3);
                   centre_width = _ui.cv.width - (one_third_width * 2);
                   play_pause_width = one_third_width - _buttons.gap_between_buttons;
+                  
+                  prev_next_width = one_third_width - _buttons.gap_between_buttons;
+                  
                   half_centre_width = ~~(centre_width / 2);
                   half_height = ~~(cv.height / 2);
                   buttons_y = o.display.background.cv.height - _buttons.button_height;
@@ -741,7 +773,7 @@ console.log('make.footer');
                   // prev button
                   _ui.chrome.prev.x = 0;
                   _ui.chrome.prev.y = buttons_y;
-                  cv.width = play_pause_width; // sets correct width and resets canvas
+                  cv.width = prev_next_width; // sets correct width and resets canvas
                   cx.fillStyle = gr;
                   _ui.make.cutStaticButton(cv, cx, _buttons.icon.prev);
                   _ui.make.darkenIcon(cx, _buttons.icon.prev);
@@ -755,7 +787,7 @@ console.log('make.footer');
                   // next button
                   _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
                   _ui.chrome.next.y = buttons_y;
-                  cv.width = play_pause_width;
+                  cv.width = prev_next_width;
                   cx.fillStyle = gr;
                   _ui.make.cutStaticButton(cv, cx, _buttons.icon.next);
                   _ui.make.darkenIcon(cx, _buttons.icon.next);
@@ -793,6 +825,48 @@ console.log('make.footer');
                   _ui.make.cutHoverButton(cx, _buttons.icon.pause, half_height);
                   _ui.make.darkenIcon(cx, _buttons.icon.pause, _defaults.hovered_icon_fill_style);
                   _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
+                  
+                  
+                  
+                  // register collisions for buttons
+                  // make use of a var pad?
+                  _ui.touch_collider.clear();
+                  _ui.mouse_collider.clear();
+                  
+//debugger; 
+                 
+                  var
+                    touch_prev_collision = {
+                      id : 'prev',
+                      x: _ui.chrome.prev.plain.x,
+                      y: _ui.chrome.prev.plain.y,
+                      width: prev_next_width,
+                      height: _ui.chrome.prev.plain.height
+                    },
+                    touch_play_pause_collision = {
+                      id : 'play_pause',
+                      x: _ui.chrome.play.plain.x, // play_pause
+                      y: _ui.chrome.play.plain.y, // play_pause
+                      width: centre_width,
+                      height: _ui.chrome.play.plain.height // play_pause
+                    },
+                    touch_next_collision = {
+                      id : 'next',
+                      x: _ui.chrome.next.plain.x,
+                      y: _ui.chrome.next.plain.y,
+                      width: prev_next_width,
+                      height: _ui.chrome.next.plain.height
+                    };
+
+                 
+                  
+                  //_ui.mouse_collider.register(prev_collision);
+                  //_ui.mouse_collider.register(play_pause_collision);
+                  //_ui.mouse_collider.register(next_collision);
+                  
+                  _ui.touch_collider.register(touch_prev_collision);
+                  _ui.touch_collider.register(touch_play_pause_collision);
+                  _ui.touch_collider.register(touch_next_collision);
                 };
 
                 f.init = function () {
@@ -912,7 +986,172 @@ console.log('make.scaleIcons');
                 cx.closePath();
               }
             },
+
+
+
+
+
+
+
+
+
+            processXY: function (css_loc) {
+              // called by: mouse.move() mouse.up() touch.end()
+              // requires:
+              //   _ui.collider.collisionTest
+              // todo: rename processLoc
+              var
+                device_loc,
+                collisions_str;
+
+              // css_loc could be a location object or FALSE
+              if (!css_loc) {
+                return false;
+              }
+
+              // convert to retina / hidpi if required
+              if (o.backing_scale !== 1) {
+                device_loc = {
+                  x: ~~(css_loc.x * o.backing_scale),
+                  y: ~~(css_loc.y * o.backing_scale)
+                };
+              } else {
+                device_loc = css_loc;
+              }
+
+              device_loc.particle_key_flag = 'string';
+
+              collisions_str = _ui.mouse_collider.collisionTest(device_loc);
+              collisions_str = _ui.touch_collider.collisionTest(device_loc);
+              
+              //? _ui.last_collision = _ui.collider.collisionTest(device_loc);
+              
+              // record collision string, or false if no collision occurred
+              _ui.last_collision = collisions_str;
+
+              // if a pad has been collided with
+              if (collisions_str) {
+  
+                if (_ui.mode.hover) { // .hovered
+  
+                  if (_ui.mode.mouse === 'upped') {
+                    switch (collisions_str) {
+                      case 'prev':
+                        o.state.looping = false;
+                        if (!o.state.transitioning) {
+                          o.engine.dec();
+                          o.engine.transition();
+                        }
+                        break;
+                      case 'next':
+                        o.state.looping = false;
+                        if (!o.state.transitioning) {
+                          o.engine.inc();
+                          o.engine.transition();
+                        }
+                        break;
+                      case 'play_pause':
+                        o.state.looping = !o.state.looping;
+  
+                        // if looping has been reinstated then will need to restart loop
+                        // beyond ui signalisation, how should this be done?
+                        // should this trigger a transformation?
+                        // transformations will not currently run while ui is showing
+                        if (o.state.looping) {
+                          o.state.pause_while_ui_visible = false;
+                          o.engine.fast_loop_restart();
+                        }
+                        break;
+                      case 'link':
+                        break;
+                    };
+                  } // /.mouse upped
+                } // /.hover
+  
+                if (_ui.mode.touched) {
+                  // touchstart / touchmove / touchend
+  
+                  switch (_ui.mode.touchtype) {
+                    case 'end':
+                      // the only one currently called as processXY in handler
+  
+                      // need to test if ui visible!?
+  
+                      switch (collisions_str) {
+                        case 'prev':
+                          o.state.looping = false;
+                          if (!o.state.transitioning) {
+                            o.engine.dec();
+                            o.engine.transition();
+                          }
+                          break;
+                        case 'next':
+                          o.state.looping = false;
+                          if (!o.state.transitioning) {
+                            o.engine.inc();
+                            o.engine.transition();
+                          }
+                          break;
+                      }
+  
+                      break;
+                    case 'move':
+                      break;
+                    case 'start':
+                      break;
+                    default:
+                  }
+                } // /.touch
+              }
+  
+              if (!ui.visible) {
+                _ui.show();
+              } else {
+                _ui.paint();
+              }
+
+
+            },
+            // touchRecordXY: function () {// called by: touch.end()},
+            getTouchLoc: function (tv) {
+              // called by: touch.end()  - replace touchRecordXY
+              var
+                touch,
+                offset;
+
+              // targetTouches and touches will not be available on touchEnd
+              touch = (tv.touches.length > 0) ? tv.touches[0] : tv.changedTouches[0];
+
+              offset = $(tv.target).offset();
+
+              return {
+                x: touch.pageX - offset.left,
+                y: touch.pageY - offset.top
+              };
+            },
+            getMouseLoc: function (ev) {
+              // called by: mouse.move() mouse.up()
+console.log('getMouseLoc');
+
+              var
+                offset,
+                el = ev.target,
+                r = {ev: ev};
+
+              if (ev.offsetX || ev.offsetX === 0) { // Webkit // Opera
+                r.x = ev.offsetX;
+                r.y = ev.offsetY;
+              } else if (ev.layerX || ev.layerX === 0) { // Firefox
+                offset = $(el).offset();
+
+                // culprit might be firefox or jquery, but offsets may not be integers
+                r.x = ~~(ev.pageX - offset.left);
+                r.y = ~~(ev.pageY - offset.top);
+              }
+              return r;
+            },
             addHandlers: function () {
+              // called by: ui.init()
 console.log('addHandlers');
               _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
               _ui.cv.addEventListener("touchmove",   ui.touch.move,   false);
@@ -931,7 +1170,17 @@ console.log('addHandlers');
               _ui.cv.addEventListener("mouseleave",  ui.mouse.out,  false);
             }
           };
+
+
+
+
+
+
+
+
+
           ui = {
+            visible: null,
             footer_height: 40, // todo: move this to o.settings?
             init: function () {
               // runs once only
@@ -950,7 +1199,10 @@ console.log('ui.init');
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
-
+              
+              _ui.touch_collider = phh.collider();
+              _ui.mouse_collider = phh.collider();
+              
               _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
 
               // load o.settings.tilesheet
@@ -972,7 +1224,7 @@ console.log('ui.init');
 
               // while perhaps waiting for tilesheet to load
 
-              _ui.addHandlers();
+              _ui.addHandlers();   
             },
             resize: function () {
 // console.log('ui.resize');
@@ -996,16 +1248,73 @@ console.log('ui.init');
               _ui.paint();
             },
             mouse: {
-              over: function (ev) {},
-              out: function (ev) {},
-              move: function (ev) {},
-              down: function (ev) {},
-              up: function (ev) {}
+              over: function (ev) {
+                _ui.mode.hovered = true;
+                _ui.mode.mouse = 'overed';
+                _ui.mode.hover = true;
+
+                if (!ui.visible) {
+                  _ui.show();
+                }
+
+                ev.preventDefault();
+              },
+              out: function (ev) {
+                _ui.mode.mouse = 'outed';
+                _ui.mode.hover = false;
+                _ui.hide();
+                ev.preventDefault();
+              },
+              move: function (ev) {
+                var loc;
+                _ui.mode.mouse = 'moved';
+
+                if (ui.visible) {
+                  loc = _ui.getMouseLoc(ev);
+                  _ui.processXY(loc);
+                }
+              },
+              down: function (ev) {
+                _ui.mode.mouse = 'downed';
+                _ui.paint();
+                ev.preventDefault();
+              },
+              up: function (ev) {
+                var loc;
+                _ui.mode.mouse = 'upped';
+
+                if (!_ui.mode.touched) { // don’t know what this does on win 8 touch-mouse mix
+                  loc = _ui.getMouseLoc(ev);
+                  _ui.processXY(loc);
+                }
+
+                ev.preventDefault();
+              }
             },
             touch: {
-              start: function (tv) {},
-              move: function (tv) {},
-              end: function (tv) {},
+              start: function (tv) {
+                _ui.mode.touched = true;
+                _ui.mode.touchtype = 'start';
+
+                // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
+
+                // disable panning etc.
+                tv.preventDefault();
+              },
+              move: function (tv) {
+                _ui.mode.touchtype = 'move';
+                // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
+                tv.preventDefault();
+              },
+              end: function (tv) {
+                //var loc = _ui.touchRecordXY(tv);
+                var loc = _ui.getTouchLoc(tv);
+
+                _ui.mode.touchtype = 'end';
+                _ui.processXY(loc);
+
+                tv.preventDefault();
+              },
               cancel: function (tv) {}
             }
           };
@@ -1225,7 +1534,229 @@ console.log('ui.init');
     }
     return r;
   }());
+  
+  phh.collider = function () {
+    // v.0.1
+    //
+    // public methods:
+    //  register()
+    //  collision()
+    // public properties:
+    //  particles
 
+    //"use strict";
+    var
+      _c, // private
+      c;  // public
+
+    // private
+    _c = {
+      /*
+      w: 0,
+      h: 0,
+      */
+      id_int: 0,
+      id_prefix: 'id',
+      newId: function () {
+        // if an id is not requested for the particle key, then create one
+        this.id_int += 1;
+        return (!c.particles[this.id_prefix + this.id_int]) ? this.id_prefix + this.id_int : this.newId();
+      },
+      newParticle: function (x, y, width, height, type, id) {
+        var
+          x_limit,
+          y_limit,
+          y_arr,
+          r = {
+            id : id,        // string
+            x: x,           // int
+            y: y,           // int
+            width: width,   // int
+            height: height, // int
+            type : type,    // string
+            collision: function (x, y) {
+              // arguments:
+              //   x and y coordinates, or a single object containing them {x: x, y: y}
+              // returns:
+              //   true if a collision has occurred, else false
+
+              if (!y && typeof x === "object") {
+                y = arguments[0].y;
+                x = arguments[0].x;
+              }
+
+              // assumes type of rect
+              if ((x >= this.x) && (x <= (this.x + this.width))) {
+                if ((y >= this.y) && (y <= (this.y + this.height))) {
+                  return true;
+                }
+              }
+              return false;
+            }
+          };
+
+        // add particle to the collider's look up table
+        // assuming a rectangle is good enough
+        for (x = r.x, x_limit = r.x + r.width; x <= x_limit; x += 1) {
+
+          // use existing array, or create new array if it doesn't exist yet
+          y_arr = this.lut[x] || [];
+
+          for (y = r.y, y_limit = r.y + r.height; y <= x_limit; y += 1) {
+            y_arr[y] = y_arr[y] || {};
+            y_arr[y][r.id] = true;
+          }
+          this.lut[x] = y_arr;
+        }
+
+        return r;
+      },
+      lut: [] // look up table, a 2D array
+    };
+
+    // public
+    c = {
+      /*
+      width: 0,
+      height: 0,
+      make: function (width, height) {
+        this.width = width;
+        this.height = height;
+
+        _c.w = width;
+        _c.h = height;
+      },
+      getWidth: function () {
+        return _c.w;
+      },
+      */
+      register: function (x, y, id_str, options) {
+        // arguments:
+        //  id string and options are both optional
+        //  options is an object that may define:
+        //    width, height, type, id string, x and y (cannot defined only x or only y within options)
+
+        var
+          width,
+          height,
+          particle_type;
+
+        if (!options) {
+          // id_str might be string or options object, or be undefined
+
+          if (!id_str) {
+            // then either x & y are supplied or x == options
+
+            id_str = _c.newId();
+            if (!y & (typeof x === 'object')) {
+              options = x;
+              x = options.x || 0;
+              y = options.y || 0;
+
+              id_str = options.id || id_str;
+            }
+          } else if (!(typeof id_str === 'string')) {
+            // then id_str (as the 3rd argument) is probably options
+            options = id_str;
+            id_str = (options && options.id) ? options.id : _c.newId();
+          }
+        }
+
+        width = (options && options.width) ? options.width: 0;
+        height = (options && options.height) ? options.height: 0;
+        particle_type = (options && options.type) ? options.type : 'rect';
+
+        console.log('register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height);
+
+        // add new id object to particles
+        this.particles[id_str] = _c.newParticle(x, y, width, height, particle_type, id_str);
+
+        return this.particles[id_str]; // return id string, or reference to object?
+      },
+      set: function (id_str, options) {},
+      clear: function () {
+        this.particles = {};
+        _c.lut = [];
+        _c.id_int = 0;
+
+        // return this; // chaining?
+      },
+      collisionTest: function (x, y, options) {
+        // arguments:
+        //   x and y coordinates, or a single object containing them {x: x, y: y}
+        //   options: a string requested another output to be returned
+        //     particle: the returned object contains the particle object
+        //     key:      return a hash object containing the particle id as a key
+        //
+        // returns:
+        //   the collided particles id as a string (unless overridden by options), or false if none have occurred
+       
+        var
+          collided = false,
+          collisions = {},
+          id_key,
+          lut_collisions_obj;
+
+        if (!y && typeof x === "object") {
+          // the x is arguments[0] and should be used as options
+          y = arguments[0].y;
+          x = arguments[0].x;
+          options = arguments[0].options; // should rename this more appropriately now
+        }
+
+        // return an array
+        // loop through each particle and test for collision
+        // make a list of all collisions
+        // collisions = [];
+        // for (id in this.particles) {
+        //  if (this.particles[id].collision(x, y)) {
+        //    collisions.push(this.particles[id]);
+        //  }
+        // }
+        //
+        // // returns an array of particle objects
+        // return (collisions.length === 0) ? false : collisions;
+
+        // check that LUT array contains indices before attempting to read them
+        if ((_c.lut[x]) && (_c.lut[x][y])) {
+
+          // return an object (or false)
+          lut_collisions_obj = _c.lut[x][y];
+          for (id_key in lut_collisions_obj) {
+            if(lut_collisions_obj.hasOwnProperty(id_key)) {
+
+              if (this.particles[id_key].collision(x, y)) {
+                if (options) {
+                  switch (options) {
+                    case 'particle':
+                      // return the particle object that was collided with
+                      collisions[id_key] = this.particles[id_key];
+                      break;
+                    case 'key':
+                      // return an object containing just the hash key of the particle
+                      collisions[id_key] = true;
+                      break;
+                    default:
+                      collisions = id_key;
+                  }
+                } else {
+                  // default to returning a string
+                  collisions = id_key;
+                }
+
+                collided = true;
+              }
+            }
+          }
+        }
+
+        return collided ? collisions: false;
+      },
+      particles: {}
+    };
+    return c;
+  };
+  
   phh.getObjectValue = function (o) {
     // v1.0
     // returns the value of the object passed in as an argument
