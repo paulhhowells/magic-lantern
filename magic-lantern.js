@@ -827,9 +827,9 @@ console.log('make.footer');
 //console.log(_buttons.pad);
 //console.log('ht: ' + o.display.background.cv.height);
 
-                  //_ui.touch_collider.register(_buttons.pad_collision.touch.prev);
-                  //_ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
-                  //_ui.touch_collider.register(_buttons.pad_collision.touch.next);
+                  _ui.touch_collider.register(_buttons.pad_collision.touch.prev);
+                  _ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
+                  _ui.touch_collider.register(_buttons.pad_collision.touch.next);
 
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
@@ -1064,13 +1064,18 @@ console.log('make.scaleIcons');
               }
                   
               if (_ui.mode.touched) {
+	
+
                 _ui.last_collision = _ui.touch_collider.collisionTest(device_loc);
+
+console.log('processLoc 1: touched: ' + device_loc.x  + ' ' + device_loc.y + ' ' + _ui.last_collision);
               } else {
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
                             
 // console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
 
+console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_collision);
 
               // if a pad has been collided with
               if (_ui.last_collision) {
@@ -1115,6 +1120,8 @@ console.log('make.scaleIcons');
 
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
+
+console.log('processLoc: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
 
                   switch (_ui.mode.touchtype) {
                     case 'end':
@@ -1339,7 +1346,7 @@ console.log('ui.init');
               start: function (tv) {
                 _ui.mode.touched = true;
                 _ui.mode.touchtype = 'start';
-
+//console.log('touch start');
                 // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
 
                 // disable panning etc.
@@ -1347,13 +1354,14 @@ console.log('ui.init');
               },
               move: function (tv) {
                 _ui.mode.touchtype = 'move';
+//console.log('touch move');
                 // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
                 tv.preventDefault();
               },
               end: function (tv) {
                 //var loc = _ui.touchRecordXY(tv);
                 var loc = _ui.getTouchLoc(tv);
-
+//console.log('touch end');
                 _ui.mode.touchtype = 'end';
                 _ui.processLoc(loc);
 
@@ -1786,7 +1794,8 @@ console.log('ui.init');
           options = arguments[0].options; // should rename this more appropriately now
         }
 
-//console.log('collisionTest: ' + x + ' ' + y);
+console.log('collisionTest: ' + x + ' ' + y + ' touched: ');
+// + _ui.mode.touched);
 
         // return an array
         // loop through each particle and test for collision
@@ -1802,7 +1811,13 @@ console.log('ui.init');
         // return (collisions.length === 0) ? false : collisions;
 
         // check that LUT array contains indices before attempting to read them
+//console.log(_c.lut);
+
+//debugger;
+
         if ((_c.lut[x]) && (_c.lut[x][y])) {
+	
+//console.log('y');
 
           // return an object (or false)
           lut_collisions_obj = _c.lut[x][y];
