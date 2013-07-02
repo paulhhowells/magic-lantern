@@ -517,14 +517,14 @@ console.log('display.updateSize');
             chrome: {
               footer: null, // img_data
 
-              // x:
-              // y:
+              // x: y: width: height:
               // plain: img_data
               // hover: img_data
               prev: {},
               next: {},
               play: {},
-              pause: {}
+              pause: {},
+              show_hide: {}
             },
             make: {
               cv: null, // a scratchpad canvas for use by make
@@ -821,7 +821,7 @@ console.log('make.footer');
                         width: prev_next_width,
                         height: o.display.background.cv.height
                       }
-                    }
+                    }              
                   };
 
 //console.log(_buttons.pad);
@@ -834,6 +834,10 @@ console.log('make.footer');
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);
+                  
+                  
+                  _ui.chrome.show_hide.x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
+                  _ui.chrome.show_hide.y = o.display.background.cv.height + (6 * o.backing_scale);
                 };
 
                 f.init = function () {
@@ -994,7 +998,9 @@ console.log('make.scaleIcons');
                  default:
                 }
               }
-
+              
+              _ui.cx.clearRect(0, 0, _ui.cv.width, _ui.cv.height);
+              
               // draw plain or hover according to state
               _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],              _ui.chrome.prev.x, _ui.chrome.prev.y);
               _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],              _ui.chrome.next.x, _ui.chrome.next.y);
@@ -1004,20 +1010,15 @@ console.log('make.scaleIcons');
               //  footer bg
               _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
 
-              //  show / hide
-
-              // calc these on init / resize
-              var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
-              var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
-
+              //  show / hide              
               _ui.cx.drawImage(
                 _ui.tilesheet.img,
                 _ui.tilesheet.show.x,
                 _ui.tilesheet.show.y,
                 _ui.tilesheet.show.width,
                 _ui.tilesheet.show.height,
-                show_hide_x,
-                show_hide_y,
+                _ui.chrome.show_hide.x,
+                _ui.chrome.show_hide.y,
                 _ui.tilesheet.show.width,
                 _ui.tilesheet.show.height
               );
@@ -1162,8 +1163,6 @@ console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.las
               } else {
                 _ui.paint();
               }
-
-
             },
             // touchRecordXY: function () {// called by: touch.end()},
             getTouchLoc: function (tv) {
