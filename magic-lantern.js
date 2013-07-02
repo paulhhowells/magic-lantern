@@ -821,7 +821,7 @@ console.log('make.footer');
                         width: prev_next_width,
                         height: o.display.background.cv.height
                       }
-                    }              
+                    }
                   };
 
 //console.log(_buttons.pad);
@@ -834,8 +834,8 @@ console.log('make.footer');
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);
-                  
-                  
+
+
                   _ui.chrome.show_hide.x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
                   _ui.chrome.show_hide.y = o.display.background.cv.height + (6 * o.backing_scale);
                 };
@@ -998,9 +998,9 @@ console.log('make.scaleIcons');
                  default:
                 }
               }
-              
+
               _ui.cx.clearRect(0, 0, _ui.cv.width, _ui.cv.height);
-              
+
               // draw plain or hover according to state
               _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],              _ui.chrome.prev.x, _ui.chrome.prev.y);
               _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],              _ui.chrome.next.x, _ui.chrome.next.y);
@@ -1010,7 +1010,7 @@ console.log('make.scaleIcons');
               //  footer bg
               _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
 
-              //  show / hide              
+              //  show / hide
               _ui.cx.drawImage(
                 _ui.tilesheet.img,
                 _ui.tilesheet.show.x,
@@ -1062,20 +1062,20 @@ console.log('make.scaleIcons');
               } else {
                 device_loc = css_loc;
               }
-                  
+
               if (_ui.mode.touched) {
-	
+
 
                 _ui.last_collision = _ui.touch_collider.collisionTest(device_loc);
 
-console.log('processLoc 1: touched: ' + device_loc.x  + ' ' + device_loc.y + ' ' + _ui.last_collision);
+//console.log('processLoc 1: touched: ' + device_loc.x  + ' ' + device_loc.y + ' ' + _ui.last_collision);
               } else {
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
-                            
+
 // console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
 
-console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_collision);
+//console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_collision);
 
               // if a pad has been collided with
               if (_ui.last_collision) {
@@ -1121,7 +1121,7 @@ console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
 
-console.log('processLoc: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
+//console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
 
                   switch (_ui.mode.touchtype) {
                     case 'end':
@@ -1144,6 +1144,16 @@ console.log('processLoc: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
                             o.engine.transition();
                           }
                           break;
+												case 'play_pause':
+		                      o.state.looping = !o.state.looping;
+
+													if (o.state.looping) {
+	                          o.state.pause_while_ui_visible = false;
+	                          o.engine.fast_loop_restart();
+	                        }
+	                        break;
+	                      case 'link':
+	                        break;
                       }
 
                       break;
@@ -1344,10 +1354,15 @@ console.log('ui.init');
             },
             touch: {
               start: function (tv) {
-                _ui.mode.touched = true;
+                var loc;
+								_ui.mode.touched = true;
                 _ui.mode.touchtype = 'start';
 //console.log('touch start');
                 // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
+
+								// triggers transition ERROR ?
+								//loc = _ui.getTouchLoc(tv);
+								//_ui.processLoc(loc);
 
                 // disable panning etc.
                 tv.preventDefault();
@@ -1794,7 +1809,7 @@ console.log('ui.init');
           options = arguments[0].options; // should rename this more appropriately now
         }
 
-console.log('collisionTest: ' + x + ' ' + y + ' touched: ');
+//console.log('collisionTest: ' + x + ' ' + y + ' touched: ');
 // + _ui.mode.touched);
 
         // return an array
@@ -1816,7 +1831,7 @@ console.log('collisionTest: ' + x + ' ' + y + ' touched: ');
 //debugger;
 
         if ((_c.lut[x]) && (_c.lut[x][y])) {
-	
+
 //console.log('y');
 
           // return an object (or false)
