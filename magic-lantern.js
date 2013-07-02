@@ -210,7 +210,7 @@ console.log('o.init');
           // this must be the wrong image to repaint with (most of the time)
           // so pick the correct image or replace with a 'paint' function that paints the right thing
 
-console.log('o.resize');
+// console.log('o.resize');
 
           o.display.updateSize();
           o.ui.resize();
@@ -368,7 +368,7 @@ console.log('display.init');
               wrapper_width;
             // this === o.display
 
-console.log('display.updateSize');
+// console.log('display.updateSize');
 
             // img = o.imgs[0];
             img = o.slides[0].img;
@@ -1046,9 +1046,7 @@ console.log('make.scaleIcons');
               // requires:
               //   _ui.collider.collisionTest
               // todo: only call by mouse or touch if something has changed
-              var
-                device_loc,
-                collisions_str;
+              var device_loc;
 
               // css_loc could be a location object or FALSE
               if (!css_loc) {
@@ -1064,32 +1062,23 @@ console.log('make.scaleIcons');
               } else {
                 device_loc = css_loc;
               }
-
-              //device_loc.particle_key_flag = 'string';
-
-              collisions_str = _ui.mouse_collider.collisionTest(device_loc);
-              //collisions_str = _ui.touch_collider.collisionTest(device_loc);
-
-
-
-              //? _ui.last_collision = _ui.collider.collisionTest(device_loc);
-
-              // record collision string, or false if no collision occurred
-              _ui.last_collision = collisions_str;
-
-console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
-
-
-
+                  
+              if (_ui.mode.touched) {
+                _ui.last_collision = _ui.touch_collider.collisionTest(device_loc);
+              } else {
+                _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
+              }
+                            
+// console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
 
 
               // if a pad has been collided with
-              if (collisions_str) {
+              if (_ui.last_collision) {
 
                 if (_ui.mode.hover) { // .hovered
 
                   if (_ui.mode.mouse === 'upped') {
-                    switch (collisions_str) {
+                    switch (_ui.last_collision) {
                       case 'prev':
                         o.state.looping = false;
                         if (!o.state.transitioning) {
@@ -1106,6 +1095,8 @@ console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.las
                         break;
                       case 'play_pause':
                         o.state.looping = !o.state.looping;
+
+// console.log('play_pause: ' + o.state.looping);
 
                         // if looping has been reinstated then will need to restart loop
                         // beyond ui signalisation, how should this be done?
@@ -1131,7 +1122,7 @@ console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.las
 
                       // need to test if ui visible!?
 
-                      switch (collisions_str) {
+                      switch (_ui.last_collision) {
                         case 'prev':
                           o.state.looping = false;
                           if (!o.state.transitioning) {
