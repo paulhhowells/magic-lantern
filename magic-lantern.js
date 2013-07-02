@@ -243,7 +243,7 @@ console.log('o.resize');
             }
           },
           fast_loop_restart: function () {
-            // called by: processXY()
+            // called by: processLoc()
 
             o.state.looping = true;
             o.engine.inc();
@@ -478,14 +478,14 @@ console.log('display.updateSize');
               hover: false,
               //ui_visible_pause: false
             },
-            last_collision: null, // processLoc() paint()
+            last_collision: false, // processLoc() paint()
             touch_collider: null,
             mouse_collider: null,
             show: function () {
               ui.visible = true;
               o.state.pause_while_ui_visible = true;
 
-console.log(o.state.looping);
+// console.log('show: ' + o.state.looping);
 
               _ui.paint();
               $(_ui.cv).removeClass(the.prefs.slides_ui_hidden_class);
@@ -494,69 +494,12 @@ console.log(o.state.looping);
               ui.visible = false;
               o.state.pause_while_ui_visible = false;
 
- console.log(o.state.looping);
+// console.log('hide: ' + o.state.looping);
 
               $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
               _ui.paint();
 
               o.engine.pause();
-            },
-            paint: function () {
-              // draw controls
-              //  prev
-              //  play_pause
-              //  next
-              var image_data;
-
-console.log('_ui.paint');
-//debugger;
-
-
-              // draw plain or hover according to state
-              image_data = _ui.chrome.prev.plain;
-              _ui.cx.putImageData(image_data, _ui.chrome.prev.x, _ui.chrome.prev.y);
-
-              image_data = _ui.chrome.play.plain;
-              _ui.cx.putImageData(image_data, _ui.chrome.play.x, _ui.chrome.play.y);
-
-              image_data = _ui.chrome.next.plain;
-              _ui.cx.putImageData(image_data, _ui.chrome.next.x, _ui.chrome.next.y);
-
-              /*
-              image_data = _ui.chrome.prev.hover;
-              _ui.cx.putImageData(image_data, _ui.chrome.prev.x, _ui.chrome.prev.y + 90);
-
-              image_data = _ui.chrome.play.hover;
-              _ui.cx.putImageData(image_data, _ui.chrome.play.x, _ui.chrome.play.y + 90);
-
-              image_data = _ui.chrome.next.hover;
-              _ui.cx.putImageData(image_data, _ui.chrome.next.x, _ui.chrome.next.y + 90);
-              */
-
-
-              // draw footer
-              //  footer bg
-              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
-
-              //  show / hide
-
-              // calc these on init / resize
-              var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
-              var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
-
-              _ui.cx.drawImage(
-                  _ui.tilesheet.img,
-                  _ui.tilesheet.show.x,
-                  _ui.tilesheet.show.y,
-                  _ui.tilesheet.show.width,
-                  _ui.tilesheet.show.height,
-                  show_hide_x,
-                  show_hide_y,
-                  _ui.tilesheet.show.width,
-                  _ui.tilesheet.show.height
-                  );
-
-//console.log('/_ui.paint');
             },
             tilesheet: {
               ready: false,
@@ -716,17 +659,18 @@ console.log('make.footer');
                 _buttons = {
                   gap_between_buttons: null,
                   edge_offset: null,
-                  button_height: null
+                  button_height: null,
+                  pad: null
                 };
 
                 f = function () {
                   var
                     cv = _ui.make.cv,
                     cx = _ui.make.cx,
-                    
-                    play_pause_width,
+
+                    //play_pause_width,
                     prev_next_width,
-                    
+
                     one_third_width,
                     centre_width,
                     half_centre_width,
@@ -737,10 +681,10 @@ console.log('make.footer');
                   cv.height = _buttons.button_height;
                   one_third_width = ~~(_ui.cv.width / 3);
                   centre_width = _ui.cv.width - (one_third_width * 2);
-                  play_pause_width = one_third_width - _buttons.gap_between_buttons;
-                  
+                  //play_pause_width = one_third_width - _buttons.gap_between_buttons;
+
                   prev_next_width = one_third_width - _buttons.gap_between_buttons;
-                  
+
                   half_centre_width = ~~(centre_width / 2);
                   half_height = ~~(cv.height / 2);
                   buttons_y = o.display.background.cv.height - _buttons.button_height;
@@ -785,7 +729,7 @@ console.log('make.footer');
                   _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
 
                   // next button
-                  _ui.chrome.next.x = _ui.cv.width - play_pause_width; // - cv.width;
+                  _ui.chrome.next.x = _ui.cv.width - prev_next_width; // - cv.width;
                   _ui.chrome.next.y = buttons_y;
                   cv.width = prev_next_width;
                   cx.fillStyle = gr;
@@ -825,48 +769,74 @@ console.log('make.footer');
                   _ui.make.cutHoverButton(cx, _buttons.icon.pause, half_height);
                   _ui.make.darkenIcon(cx, _buttons.icon.pause, _defaults.hovered_icon_fill_style);
                   _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
-                  
-                  
-                  
+
+
+
                   // register collisions for buttons
                   // make use of a var pad?
                   _ui.touch_collider.clear();
                   _ui.mouse_collider.clear();
-                  
-//debugger; 
-                 
-                  var
-                    touch_prev_collision = {
-                      id : 'prev',
-                      x: _ui.chrome.prev.plain.x,
-                      y: _ui.chrome.prev.plain.y,
-                      width: prev_next_width,
-                      height: _ui.chrome.prev.plain.height
-                    },
-                    touch_play_pause_collision = {
-                      id : 'play_pause',
-                      x: _ui.chrome.play.plain.x, // play_pause
-                      y: _ui.chrome.play.plain.y, // play_pause
-                      width: centre_width,
-                      height: _ui.chrome.play.plain.height // play_pause
-                    },
-                    touch_next_collision = {
-                      id : 'next',
-                      x: _ui.chrome.next.plain.x,
-                      y: _ui.chrome.next.plain.y,
-                      width: prev_next_width,
-                      height: _ui.chrome.next.plain.height
-                    };
 
+//debugger;
+                  _buttons.pad_collision = {
+                    touch: {
+                      prev: {
+                        id: 'prev',
+                        x: _ui.chrome.prev.x,
+                        y: _ui.chrome.prev.y,
+                        width: prev_next_width,
+                        height: _ui.chrome.prev.plain.height
+                      },
+                      play_pause: {
+                        id: 'play_pause',
+                        x: _ui.chrome.play.x, // play_pause
+                        y: _ui.chrome.play.y, // play_pause
+                        width: centre_width,
+                        height: _ui.chrome.play.plain.height // play_pause
+                      },
+                      next: {
+                        id: 'next',
+                        x: _ui.chrome.next.x,
+                        y: _ui.chrome.next.y,
+                        width: prev_next_width,
+                        height: _ui.chrome.next.plain.height
+                      }
+                    },
+                    mouse: {
+                      prev: {
+                        id: 'prev',
+                        x: _ui.chrome.prev.x,
+                        y: 0,
+                        width: prev_next_width,
+                        height: o.display.background.cv.height
+                      },
+                      play_pause: {
+                        id: 'play_pause',
+                        x: _ui.chrome.play.x, // play_pause
+                        y: 0, // play_pause
+                        width: centre_width,
+                        height: o.display.background.cv.height // play_pause
+                      },
+                      next: {
+                        id: 'next',
+                        x: _ui.chrome.next.x,
+                        y: 0,
+                        width: prev_next_width,
+                        height: o.display.background.cv.height
+                      }
+                    }
+                  };
+
+console.log(_buttons.pad);
+console.log('ht: ' + o.display.background.cv.height);
                  
+                  //_ui.touch_collider.register(_buttons.pad_collision.touch.prev);
+                  //_ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
+                  //_ui.touch_collider.register(_buttons.pad_collision.touch.next);
                   
-                  //_ui.mouse_collider.register(prev_collision);
-                  //_ui.mouse_collider.register(play_pause_collision);
-                  //_ui.mouse_collider.register(next_collision);
-                  
-                  _ui.touch_collider.register(touch_prev_collision);
-                  _ui.touch_collider.register(touch_play_pause_collision);
-                  _ui.touch_collider.register(touch_next_collision);
+                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
+                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
+                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);                 
                 };
 
                 f.init = function () {
@@ -994,12 +964,85 @@ console.log('make.scaleIcons');
 
 
 
+            paint: function () {
+              // draw controls
+              //  prev
+              //  play_pause
+              //  next
+              var image_data;
 
-            processXY: function (css_loc) {
+// console.log('_ui.paint');
+//debugger;
+              var chrome_state = {
+                prev: 'plain',
+                next: 'plain',
+                play_pause: 'plain',
+              };
+              
+              if (_ui.last_collision) {
+                var hover_name = _ui.last_collision;
+                
+                
+                
+
+
+                // debugger;
+                
+                
+                
+                switch (_ui.last_collision) {
+                 case 'prev':
+                   chrome_state.prev = 'hover';
+                   break;
+                 case 'next':
+                   chrome_state.next = 'hover';
+                   break;
+                 case 'play_pause':
+                   chrome_state.play_pause = 'hover'; 
+                   break;
+                 default:
+                }                
+              }
+//debugger;
+
+console.log('paint _ui.last_collision: ' + _ui.last_collision);
+
+
+              // draw plain or hover according to state
+              _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],        _ui.chrome.prev.x, _ui.chrome.prev.y);
+              _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],        _ui.chrome.next.x, _ui.chrome.next.y);
+              _ui.cx.putImageData(_ui.chrome.play[chrome_state.play_pause],  _ui.chrome.play.x, _ui.chrome.play.y);
+              // _ui.cx.putImageData(_ui.chrome.pause[chrome_state.play_pause], _ui.chrome.play.x, _ui.chrome.play.y);
+
+
+              // draw footer
+              //  footer bg
+// console.log(_ui.chrome.footer);
+              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+
+              //  show / hide
+
+              // calc these on init / resize
+              var show_hide_x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
+              var show_hide_y = o.display.background.cv.height + (6 * o.backing_scale);
+
+              _ui.cx.drawImage(
+                _ui.tilesheet.img,
+                _ui.tilesheet.show.x,
+                _ui.tilesheet.show.y,
+                _ui.tilesheet.show.width,
+                _ui.tilesheet.show.height,
+                show_hide_x,
+                show_hide_y,
+                _ui.tilesheet.show.width,
+                _ui.tilesheet.show.height
+              );
+            },
+            processLoc: function (css_loc) {
               // called by: mouse.move() mouse.up() touch.end()
               // requires:
               //   _ui.collider.collisionTest
-              // todo: rename processLoc
+              // todo: only call by mouse or touch if something has changed
               var
                 device_loc,
                 collisions_str;
@@ -1019,21 +1062,29 @@ console.log('make.scaleIcons');
                 device_loc = css_loc;
               }
 
-              device_loc.particle_key_flag = 'string';
+              //device_loc.particle_key_flag = 'string';
 
               collisions_str = _ui.mouse_collider.collisionTest(device_loc);
-              collisions_str = _ui.touch_collider.collisionTest(device_loc);
-              
+              //collisions_str = _ui.touch_collider.collisionTest(device_loc);
+
+
+
               //? _ui.last_collision = _ui.collider.collisionTest(device_loc);
-              
+
               // record collision string, or false if no collision occurred
               _ui.last_collision = collisions_str;
+              
+console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
+
+
+
+
 
               // if a pad has been collided with
               if (collisions_str) {
-  
+
                 if (_ui.mode.hover) { // .hovered
-  
+
                   if (_ui.mode.mouse === 'upped') {
                     switch (collisions_str) {
                       case 'prev':
@@ -1052,7 +1103,7 @@ console.log('make.scaleIcons');
                         break;
                       case 'play_pause':
                         o.state.looping = !o.state.looping;
-  
+
                         // if looping has been reinstated then will need to restart loop
                         // beyond ui signalisation, how should this be done?
                         // should this trigger a transformation?
@@ -1067,16 +1118,16 @@ console.log('make.scaleIcons');
                     };
                   } // /.mouse upped
                 } // /.hover
-  
+
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
-  
+
                   switch (_ui.mode.touchtype) {
                     case 'end':
-                      // the only one currently called as processXY in handler
-  
+                      // the only one currently called as processLoc in handler
+
                       // need to test if ui visible!?
-  
+
                       switch (collisions_str) {
                         case 'prev':
                           o.state.looping = false;
@@ -1093,7 +1144,7 @@ console.log('make.scaleIcons');
                           }
                           break;
                       }
-  
+
                       break;
                     case 'move':
                       break;
@@ -1103,7 +1154,7 @@ console.log('make.scaleIcons');
                   }
                 } // /.touch
               }
-  
+
               if (!ui.visible) {
                 _ui.show();
               } else {
@@ -1131,8 +1182,6 @@ console.log('make.scaleIcons');
             },
             getMouseLoc: function (ev) {
               // called by: mouse.move() mouse.up()
-console.log('getMouseLoc');
-
               var
                 offset,
                 el = ev.target,
@@ -1148,11 +1197,14 @@ console.log('getMouseLoc');
                 r.x = ~~(ev.pageX - offset.left);
                 r.y = ~~(ev.pageY - offset.top);
               }
+              
+// console.log('getMouseLoc: ' + r.x + ' ' + r.y);
+
               return r;
             },
             addHandlers: function () {
               // called by: ui.init()
-console.log('addHandlers');
+// console.log('addHandlers');
               _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
               _ui.cv.addEventListener("touchmove",   ui.touch.move,   false);
               _ui.cv.addEventListener("touchend",    ui.touch.end,    false);
@@ -1199,10 +1251,10 @@ console.log('ui.init');
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
-              
+
               _ui.touch_collider = phh.collider();
               _ui.mouse_collider = phh.collider();
-              
+
               _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
 
               // load o.settings.tilesheet
@@ -1224,7 +1276,7 @@ console.log('ui.init');
 
               // while perhaps waiting for tilesheet to load
 
-              _ui.addHandlers();   
+              _ui.addHandlers();
             },
             resize: function () {
 // console.log('ui.resize');
@@ -1271,12 +1323,12 @@ console.log('ui.init');
 
                 if (ui.visible) {
                   loc = _ui.getMouseLoc(ev);
-                  _ui.processXY(loc);
+                  // _ui.processLoc(loc);
                 }
               },
               down: function (ev) {
                 _ui.mode.mouse = 'downed';
-                _ui.paint();
+                //_ui.paint();
                 ev.preventDefault();
               },
               up: function (ev) {
@@ -1285,7 +1337,7 @@ console.log('ui.init');
 
                 if (!_ui.mode.touched) { // don’t know what this does on win 8 touch-mouse mix
                   loc = _ui.getMouseLoc(ev);
-                  _ui.processXY(loc);
+                  _ui.processLoc(loc);
                 }
 
                 ev.preventDefault();
@@ -1311,7 +1363,7 @@ console.log('ui.init');
                 var loc = _ui.getTouchLoc(tv);
 
                 _ui.mode.touchtype = 'end';
-                _ui.processXY(loc);
+                _ui.processLoc(loc);
 
                 tv.preventDefault();
               },
@@ -1534,6 +1586,44 @@ console.log('ui.init');
     }
     return r;
   }());
+
+  phh.getObjectValue = function (o) {
+    // v1.0
+    // returns the value of the object passed in as an argument
+    // rather than returning a reference to the object
+    // arguments: o may be an object, or a property of the object (i.e. string, number, array etc.)
+    // but not expecting a function as an argument
+    // todo: include functions by reference
+    // todo: test in IE and firefox
+    var
+      p, // property
+      r; // return object
+
+    // if (phh.isArray(o)) {
+    //   r = [];
+    //} else {
+      r = (o.constructor) ? new o.constructor() : {};
+    //}
+
+    for (p in o) {
+      if (o.hasOwnProperty(p)) {
+        // if the property is an array or an object then recurse
+        r[p] = (typeof o[p] === "object") ? phh.getObjectValue(o[p]) : o[p];
+      }
+    }
+    return r;
+  };
+
+  phh.isArray = (function () {
+    // v1.1
+    // usually could use jQuery function isArray
+    // have used memoization to avoid repeatedly defining toString
+    var toString = Object.prototype.toString;
+
+    return function (t) {
+      return !!(toString.call(t) === "[object Array]");
+    };
+  }());
   
   phh.collider = function () {
     // v.0.1
@@ -1602,13 +1692,12 @@ console.log('ui.init');
           // use existing array, or create new array if it doesn't exist yet
           y_arr = this.lut[x] || [];
 
-          for (y = r.y, y_limit = r.y + r.height; y <= x_limit; y += 1) {
+          for (y = r.y, y_limit = r.y + r.height; y <= y_limit; y += 1) {
             y_arr[y] = y_arr[y] || {};
             y_arr[y][r.id] = true;
           }
           this.lut[x] = y_arr;
         }
-
         return r;
       },
       lut: [] // look up table, a 2D array
@@ -1666,7 +1755,7 @@ console.log('ui.init');
         height = (options && options.height) ? options.height: 0;
         particle_type = (options && options.type) ? options.type : 'rect';
 
-        console.log('register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height);
+console.log('collider.register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height + ' ' + id_str);
 
         // add new id object to particles
         this.particles[id_str] = _c.newParticle(x, y, width, height, particle_type, id_str);
@@ -1675,6 +1764,7 @@ console.log('ui.init');
       },
       set: function (id_str, options) {},
       clear: function () {
+// console.log('collider.clear');
         this.particles = {};
         _c.lut = [];
         _c.id_int = 0;
@@ -1690,7 +1780,7 @@ console.log('ui.init');
         //
         // returns:
         //   the collided particles id as a string (unless overridden by options), or false if none have occurred
-       
+
         var
           collided = false,
           collisions = {},
@@ -1703,6 +1793,8 @@ console.log('ui.init');
           x = arguments[0].x;
           options = arguments[0].options; // should rename this more appropriately now
         }
+
+//console.log('collisionTest: ' + x + ' ' + y);
 
         // return an array
         // loop through each particle and test for collision
@@ -1756,43 +1848,6 @@ console.log('ui.init');
     };
     return c;
   };
-  
-  phh.getObjectValue = function (o) {
-    // v1.0
-    // returns the value of the object passed in as an argument
-    // rather than returning a reference to the object
-    // arguments: o may be an object, or a property of the object (i.e. string, number, array etc.)
-    // but not expecting a function as an argument
-    // todo: include functions by reference
-    // todo: test in IE and firefox
-    var
-      p, // property
-      r; // return object
 
-    // if (phh.isArray(o)) {
-    //   r = [];
-    //} else {
-      r = (o.constructor) ? new o.constructor() : {};
-    //}
-
-    for (p in o) {
-      if (o.hasOwnProperty(p)) {
-        // if the property is an array or an object then recurse
-        r[p] = (typeof o[p] === "object") ? phh.getObjectValue(o[p]) : o[p];
-      }
-    }
-    return r;
-  };
-
-  phh.isArray = (function () {
-    // v1.1
-    // usually could use jQuery function isArray
-    // have used memoization to avoid repeatedly defining toString
-    var toString = Object.prototype.toString;
-
-    return function (t) {
-      return !!(toString.call(t) === "[object Array]");
-    };
-  }());
 
 }(jQuery));
