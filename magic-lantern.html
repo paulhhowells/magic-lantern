@@ -10,7 +10,7 @@
 	<title>magic lantern</title>
 	<style>
 		body {
-			margin: 0; 
+			margin: 0;
 			padding: 0;
 			background-color: #ddd;
 			font-family: sans-serif;
@@ -32,33 +32,45 @@
 		canvas {
 			display: block;
 		}
-		
+
 		.slides {position: relative;}
 		.slides-base {position: absolute;}
 		.slides-overlay {position: absolute;}
-		.slides-ui {position: relative;}
+		.slides-ui {
+			position: relative;
+			-moz-transition-property: opacity;
+			-webkit-transition-property: opacity;
+			transition-property: opacity;
+
+			-moz-transition-duration: 1s;
+			-webkit-transition-duration: 1s;
+			transition-duration: 1s;
+		}
+		.slides-ui-hidden {
+			opacity: 0;
+		}
 	</style>
 
 </head>
 <body>
 	<div class="wrapper">
 		<h1>magic lantern</h1>
-		
+
 		<!-- mark-up based on Drupal 7 Views output -->
 		<div id="block-views-front-page-slideshow-block">
 			<div class="view-content">
 				<div class="views-row">
-				  <img src="A-800x600.png" alt="A-800x600" />
+					<img src="A-800x600.png" alt="A-800x600" />
 				</div>
 				<div class="views-row">
-				  <img src="B-800x600.png" alt="B-800x600" />
+					<img src="B-800x600.png" alt="B-800x600" />
 				</div>
 				<div class="views-row">
-				  <img src="C-800x600.png" alt="C-800x600" />
+					<img src="C-800x600.png" alt="C-800x600" />
 				</div>
 			</div>
 		</div>
-				
+
 	</div>
 	<!-- <script src='../sites/all/modules/jquery_update/replace/jquery/1.5/jquery.js'></script> -->
 	<script src='../jquery/1.5/jquery.js'></script>
