@@ -134,7 +134,7 @@ var phh = phh || {};
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 40000, //8000,       // pause between transitions, milliseconds
+          pause : 3000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           }
@@ -145,7 +145,7 @@ var phh = phh || {};
         slides: [], // {text, img {el, width, height}, link }
         state: {
           pause_while_ui_visible: false, // was: ui.ui_visible_pause
-          looping: false,
+          looping: true,
           transitioning: false // read by resize, written by transition()
           //current_slide: 0,
           //target_slide: 0
@@ -827,8 +827,8 @@ console.log('make.footer');
                     }
                   };
 
-console.log(_buttons.pad);
-console.log('ht: ' + o.display.background.cv.height);
+//console.log(_buttons.pad);
+//console.log('ht: ' + o.display.background.cv.height);
                  
                   //_ui.touch_collider.register(_buttons.pad_collision.touch.prev);
                   //_ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
@@ -840,7 +840,7 @@ console.log('ht: ' + o.display.background.cv.height);
                 };
 
                 f.init = function () {
-console.log('buttons.init');
+//console.log('buttons.init');
                   _buttons.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                   _buttons.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
                   _buttons.button_height = (o.backing_scale === 1) ? _defaults.button_height : _defaults.button_height * o.backing_scale;
@@ -978,6 +978,7 @@ console.log('make.scaleIcons');
                 next: 'plain',
                 play_pause: 'plain',
               };
+              var play_pause = (o.state.looping) ? 'pause' : 'play';
               
               if (_ui.last_collision) {
                 var hover_name = _ui.last_collision;
@@ -1011,8 +1012,10 @@ console.log('paint _ui.last_collision: ' + _ui.last_collision);
               // draw plain or hover according to state
               _ui.cx.putImageData(_ui.chrome.prev[chrome_state.prev],        _ui.chrome.prev.x, _ui.chrome.prev.y);
               _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],        _ui.chrome.next.x, _ui.chrome.next.y);
-              _ui.cx.putImageData(_ui.chrome.play[chrome_state.play_pause],  _ui.chrome.play.x, _ui.chrome.play.y);
-              // _ui.cx.putImageData(_ui.chrome.pause[chrome_state.play_pause], _ui.chrome.play.x, _ui.chrome.play.y);
+              
+              
+              
+              _ui.cx.putImageData(_ui.chrome[play_pause][chrome_state.play_pause],  _ui.chrome.play.x, _ui.chrome.play.y);
 
 
               // draw footer
@@ -1323,8 +1326,9 @@ console.log('ui.init');
 
                 if (ui.visible) {
                   loc = _ui.getMouseLoc(ev);
-                  // _ui.processLoc(loc);
+                  _ui.processLoc(loc);
                 }
+                ev.preventDefault();
               },
               down: function (ev) {
                 _ui.mode.mouse = 'downed';
@@ -1339,7 +1343,6 @@ console.log('ui.init');
                   loc = _ui.getMouseLoc(ev);
                   _ui.processLoc(loc);
                 }
-
                 ev.preventDefault();
               }
             },
@@ -1755,7 +1758,7 @@ console.log('ui.init');
         height = (options && options.height) ? options.height: 0;
         particle_type = (options && options.type) ? options.type : 'rect';
 
-console.log('collider.register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height + ' ' + id_str);
+// console.log('collider.register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height + ' ' + id_str);
 
         // add new id object to particles
         this.particles[id_str] = _c.newParticle(x, y, width, height, particle_type, id_str);
