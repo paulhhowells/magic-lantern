@@ -763,6 +763,7 @@ console.log('make.footer');
                   _ui.mouse_collider.clear();
 
 //debugger;
+                  // todo: make id implicit
                   _buttons.pad_collision = {
                     touch: {
                       prev: {
@@ -785,6 +786,13 @@ console.log('make.footer');
                         y: _ui.chrome.next.y,
                         width: prev_next_width,
                         height: _ui.chrome.next.plain.height
+                      },
+                      show_hide: {
+                        id: 'show_hide',
+                        x: 0, //Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
+                        y: o.display.background.cv.height,
+                        width: _ui.cv.width, // _ui.tilesheet.footer_tab.width,
+                        height: _buttons.button_height
                       }
                     },
                     mouse: {
@@ -808,21 +816,30 @@ console.log('make.footer');
                         y: 0,
                         width: prev_next_width,
                         height: o.display.background.cv.height
+                      },
+                      show_hide: {
+                        id: 'show_hide',
+                        x: 0, //Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
+                        y: o.display.background.cv.height,
+                        width: _ui.cv.width, //_ui.tilesheet.footer_tab.width,
+                        height: _buttons.button_height
                       }
                     }
                   };
 
 //console.log(_buttons.pad);
 //console.log('ht: ' + o.display.background.cv.height);
-
+                  
+                  // todo: make a loop out of registration
                   _ui.touch_collider.register(_buttons.pad_collision.touch.prev);
                   _ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
                   _ui.touch_collider.register(_buttons.pad_collision.touch.next);
-
+                  _ui.touch_collider.register(_buttons.pad_collision.touch.show_hide);
+                  
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);
-
+                  _ui.mouse_collider.register(_buttons.pad_collision.mouse.show_hide);
 
                   _ui.chrome.show_hide.x = (o.display.background.cv.width / 2) - (_ui.tilesheet.show.width / 2);
                   _ui.chrome.show_hide.y = o.display.background.cv.height + (6 * o.backing_scale);
@@ -1155,7 +1172,7 @@ console.log('make.scaleIcons');
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
 
-console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
+// console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
 
                   switch (_ui.mode.touchtype) {
                     case 'end':
