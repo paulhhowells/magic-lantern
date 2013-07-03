@@ -66,6 +66,7 @@ var phh = phh || {};
       slides_base_class: 'slides-base',
       slides_overlay_class: 'slides-overlay',
       slides_ui_class: 'slides-ui',
+			slides_ui_footer_class: 'slides-ui-footer',
       slides_ui_hidden_class: 'slides-ui-hidden',
       transition: {
         duration : 2100, // milliseconds
@@ -125,11 +126,14 @@ var phh = phh || {};
       $('<canvas />').
         addClass(the.prefs.slides_overlay_class).
         appendTo($wrapper);
-
+      
+      $('<canvas />').
+	      addClass(the.prefs.slides_ui_footer_class).
+	      appendTo($wrapper);
+      
       $('<canvas />').
         addClass(the.prefs.slides_ui_class).
         appendTo($wrapper);
-
 
       o = {
         settings: {
@@ -470,6 +474,10 @@ console.log('display.init');
           _ui = {
             cv: null,
             cx: null,
+						footer: {
+	            cv: null,
+	            cx: null
+						},
             mode: {
               touched: null,
               touchtype : '',
@@ -852,6 +860,7 @@ console.log('make.footer');
                   }
                   _buttons.icon = _defaults.icon;
 
+									// transfer f to _buttons ?
                   f.gap_between_buttons = _buttons.gap_between_buttons;
                 };
                 return f;
@@ -1008,7 +1017,9 @@ console.log('make.scaleIcons');
 
               // draw footer
               //  footer bg
-              _ui.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+							// todo: move this now that it's on another canvas and should not vary in visibility?
+							// need to paint on resize though
+              _ui.footer.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
 
               //  show / hide
               _ui.cx.drawImage(
@@ -1255,11 +1266,16 @@ console.log('ui.init');
               if (o.backing_scale !== 1) {
                 _ui.make.scaleIcons(_ui.icon);
               }
-
-              _ui.cv = $('canvas.' +the.prefs.slides_ui_class, $wrapper)[0];
+      
+              _ui.cv = $('canvas.' + the.prefs.slides_ui_class, $wrapper)[0];
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
+
+							_ui.footer.cv = $('canvas.' + the.prefs.slides_ui_footer_class, $wrapper)[0];
+							_ui.footer.cx = _ui.footer.cv.getContext("2d");
+							_ui.footer.cv.width = _ui.cv.width;
+							_ui.footer.cv.height = _ui.cv.height;
 
               _ui.touch_collider = phh.collider();
               _ui.mouse_collider = phh.collider();
