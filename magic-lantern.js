@@ -489,26 +489,6 @@ console.log('display.init');
             last_collision: false, // processLoc() paint()
             touch_collider: null,
             mouse_collider: null,
-            show: function () {
-              ui.visible = true;
-              o.state.pause_while_ui_visible = true;
-
-// console.log('show: ' + o.state.looping);
-
-              _ui.paint();
-              $(_ui.cv).removeClass(the.prefs.slides_ui_hidden_class);
-            },
-            hide: function () {
-              ui.visible = false;
-              o.state.pause_while_ui_visible = false;
-
-// console.log('hide: ' + o.state.looping);
-
-              $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
-              _ui.paint();
-
-              o.engine.pause();
-            },
             tilesheet: {
               ready: false,
               img: new Image(), // to load tilesheet into
@@ -660,7 +640,7 @@ console.log('make.footer');
                       arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
                       centre: {}
                     },
-                    show_hide: {}
+                    // todo: remove this? show_hide: {}
                   }
                 };
 
@@ -974,14 +954,34 @@ console.log('make.scaleIcons');
 
 
 
+            show: function () {
+              ui.visible = true;
+              o.state.pause_while_ui_visible = true;
 
-            paint: function () {
+// console.log('show: ' + o.state.looping);
+
+              _ui.paint();
+              $(_ui.cv).removeClass(the.prefs.slides_ui_hidden_class);
+            },
+            hide: function () {
+              ui.visible = false;
+              o.state.pause_while_ui_visible = false;
+
+// console.log('hide: ' + o.state.looping);
+
+              $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
+              _ui.paint();
+
+              o.engine.pause();
+            },
+            paint: function () {         
+// console.log('_ui.paint');
+// console.log('paint _ui.last_collision: ' + _ui.last_collision);
+              
               // draw controls
               //  prev
               //  play_pause
               //  next
-// console.log('_ui.paint');
-// console.log('paint _ui.last_collision: ' + _ui.last_collision);
               var
                 chrome_state,
                 play_pause;
@@ -1015,25 +1015,6 @@ console.log('make.scaleIcons');
               _ui.cx.putImageData(_ui.chrome.next[chrome_state.next],              _ui.chrome.next.x, _ui.chrome.next.y);
               _ui.cx.putImageData(_ui.chrome[play_pause][chrome_state.play_pause], _ui.chrome.play.x, _ui.chrome.play.y);
 
-              // draw footer
-              //  footer bg
-							// todo: move this now that it's on another canvas and should not vary in visibility?
-							// need to paint on resize though
-              _ui.footer.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
-
-              //  show / hide
-              _ui.cx.drawImage(
-                _ui.tilesheet.img,
-                _ui.tilesheet.show.x,
-                _ui.tilesheet.show.y,
-                _ui.tilesheet.show.width,
-                _ui.tilesheet.show.height,
-                _ui.chrome.show_hide.x,
-                _ui.chrome.show_hide.y,
-                _ui.tilesheet.show.width,
-                _ui.tilesheet.show.height
-              );
-
               // draw gaps between buttons
               _ui.cx.fillStyle = 'rgba(0, 0, 0, 0.3)';
               _ui.cx.beginPath();
@@ -1051,6 +1032,40 @@ console.log('make.scaleIcons');
                 );
               _ui.cx.fill();
               _ui.cx.closePath();
+
+
+              // draw footer
+              //  footer bg
+              _ui.footer.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
+
+              //  show / hide
+              if (ui.visible) {
+                _ui.footer.cx.drawImage(
+                  _ui.tilesheet.img,
+                  _ui.tilesheet.hide.x,
+                  _ui.tilesheet.hide.y,
+                  _ui.tilesheet.hide.width,
+                  _ui.tilesheet.hide.height,
+                  _ui.chrome.show_hide.x,
+                  _ui.chrome.show_hide.y,
+                  _ui.tilesheet.hide.width,
+                  _ui.tilesheet.hide.height
+                );            
+              } else {
+                _ui.footer.cx.drawImage(
+                  _ui.tilesheet.img,
+                  _ui.tilesheet.show.x,
+                  _ui.tilesheet.show.y,
+                  _ui.tilesheet.show.width,
+                  _ui.tilesheet.show.height,
+                  _ui.chrome.show_hide.x,
+                  _ui.chrome.show_hide.y,
+                  _ui.tilesheet.show.width,
+                  _ui.tilesheet.show.height
+                );
+              }
+              
+
             },
             processLoc: function (css_loc) {
               // called by: mouse.move() mouse.up() touch.end()
@@ -1123,6 +1138,14 @@ console.log('make.scaleIcons');
                           o.engine.fast_loop_restart();
                         }
                         break;
+                      case 'show_hide':
+                        ui.visible = !ui.visible;
+                        if (!ui.visible) {
+                          _ui.hide();
+                        } else {
+                          _ui.show();  
+                        }
+                        break;
                       case 'link':
                         break;
                     };
@@ -1132,7 +1155,7 @@ console.log('make.scaleIcons');
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
 
-//console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
+console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
 
                   switch (_ui.mode.touchtype) {
                     case 'end':
@@ -1163,6 +1186,16 @@ console.log('make.scaleIcons');
 	                          o.engine.fast_loop_restart();
 	                        }
 	                        break;
+                        case 'show_hide':
+                          ui.visible = !ui.visible;
+                          
+                          if (!ui.visible) {
+                            _ui.hide();
+                          } else {
+                            //_ui.paint();
+                            _ui.show();  
+                          }
+                          break;
 	                      case 'link':
 	                        break;
                       }
@@ -1177,11 +1210,16 @@ console.log('make.scaleIcons');
                 } // /.touch
               }
 
-              if (!ui.visible) {
-                _ui.show();
-              } else {
+              // if (!ui.visible) {
+              //   _ui.show();
+              // } else {
+              //   _ui.paint();
+              // }
+              
+              // todo: paint before show()
+              //if (ui.visible) {
                 _ui.paint();
-              }
+              //}
             },
             // touchRecordXY: function () {// called by: touch.end()},
             getTouchLoc: function (tv) {
