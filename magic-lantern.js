@@ -789,9 +789,9 @@ console.log('make.footer');
                       },
                       show_hide: {
                         id: 'show_hide',
-                        x: 0, //Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
+                        x: Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
                         y: o.display.background.cv.height,
-                        width: _ui.cv.width, // _ui.tilesheet.footer_tab.width,
+                        width: _ui.tilesheet.footer_tab.width,
                         height: _buttons.button_height
                       }
                     },
@@ -819,9 +819,9 @@ console.log('make.footer');
                       },
                       show_hide: {
                         id: 'show_hide',
-                        x: 0, //Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
+                        x: Math.round((_ui.cv.width - _ui.tilesheet.footer_tab.width) / 2),
                         y: o.display.background.cv.height,
-                        width: _ui.cv.width, //_ui.tilesheet.footer_tab.width,
+                        width: _ui.tilesheet.footer_tab.width,
                         height: _buttons.button_height
                       }
                     }
@@ -1089,6 +1089,7 @@ console.log('make.scaleIcons');
               // requires:
               //   _ui.collider.collisionTest
               // todo: only call by mouse or touch if something has changed
+              // todo: touch and mouse very similar, look for opportunity to refactor            
               var device_loc;
 
               // css_loc could be a location object or FALSE
@@ -1119,12 +1120,27 @@ console.log('make.scaleIcons');
 // console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
 
 //console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_collision);
-
+              
+              
+              // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
+              // if (el.style) el.style.cursor='pointer'
+              // in tests only shows up on desktop / mouse
+              // todo: create show_hide collision pad from bitmap (x1 & x2) ?
+              switch (_ui.last_collision) {
+                case 'prev':
+                case 'next':  
+                case 'play_pause':  
+                case 'show_hide':
+                  $(_ui.cv).addClass('slides-ui-pointer');
+                  break;
+                default:
+                  $(_ui.cv).removeClass('slides-ui-pointer');
+                  break;
+              }
+              
               // if a pad has been collided with
               if (_ui.last_collision) {
-
-                if (_ui.mode.hover) { // .hovered
-
+                if (_ui.mode.hover) { // .hovered 
                   if (_ui.mode.mouse === 'upped') {
                     switch (_ui.last_collision) {
                       case 'prev':
@@ -1182,26 +1198,32 @@ console.log('make.scaleIcons');
 
                       switch (_ui.last_collision) {
                         case 'prev':
-                          o.state.looping = false;
-                          if (!o.state.transitioning) {
-                            o.engine.dec();
-                            o.engine.transition();
+                          if (ui.visible) {
+                            o.state.looping = false;
+                            if (!o.state.transitioning) {
+                              o.engine.dec();
+                              o.engine.transition();
+                            }
                           }
                           break;
                         case 'next':
-                          o.state.looping = false;
-                          if (!o.state.transitioning) {
-                            o.engine.inc();
-                            o.engine.transition();
-                          }
+                          if (ui.visible) {
+                            o.state.looping = false;
+                            if (!o.state.transitioning) {
+                              o.engine.inc();
+                              o.engine.transition();
+                            }
+                          }                         
                           break;
 												case 'play_pause':
-		                      o.state.looping = !o.state.looping;
+		                      if (ui.visible) {
+  		                      o.state.looping = !o.state.looping;
 
-													if (o.state.looping) {
-	                          o.state.pause_while_ui_visible = false;
-	                          o.engine.fast_loop_restart();
-	                        }
+  													if (o.state.looping) {
+  	                          o.state.pause_while_ui_visible = false;
+  	                          o.engine.fast_loop_restart();
+  	                        }               
+		                      }                      
 	                        break;
                         case 'show_hide':
                           ui.visible = !ui.visible;
