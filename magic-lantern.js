@@ -455,7 +455,7 @@ var phh = phh || {};
             tilesheet: {
               ready: false,
               img: new Image(), // to load tilesheet into
-              
+
               // move into .dimensions
               shadow: {
                 left:  {x: 144, y: 0, width: 5, height: 5},
@@ -488,35 +488,36 @@ var phh = phh || {};
                 this.cv = document.createElement('canvas');
                 this.cx = this.cv.getContext('2d');
                 this.buttons.init();
-                
+
                 // if backing scale requires it, go through tilesheet and scale
                 // scale up tilesheet dimensions, used by make.footer(), _ui.paint(), _ui.buttons()
                 // move this into tilesheet.init?
-                
+
                 // todo: refactor!!!
-                
+
                 var scale = function (o, scale) {
                   var p;
-                  
+
                   for (p in o) {
                     if (o.hasOwnProperty(p)) {
-                      o[p] = o[p] * scale;   
+                      o[p] = o[p] * scale;
                     }
                   }
                 };
-                
+
                 if (o.backing_scale !== 1) {
                   scale(_ui.tilesheet.shadow.left, o.backing_scale);
                   scale(_ui.tilesheet.shadow.mid, o.backing_scale);
                   scale(_ui.tilesheet.shadow.right, o.backing_scale);
-                  
+
                   scale(_ui.tilesheet.footer_tab, o.backing_scale);
                   scale(_ui.tilesheet.show, o.backing_scale);
                   scale(_ui.tilesheet.hide, o.backing_scale);
                 }
               },
               footer: function () {
-                // make footer background
+                // make footer background, and save it in
+ 								// _ui.chrome.footer ready for use
 
                 var
                   cv = _ui.make.cv,
@@ -533,7 +534,7 @@ var phh = phh || {};
                 // set dimensions and clear the make scratchpad canvas
                 cv.width = _ui.cv.width;
                 cv.height = tilesheet_img.height;
-   
+
                 // calculate where to draw the shadow
                 x_left = 0;
                 x_right = cv.width - _ui.tilesheet.shadow.right.width; // (_ui.tilesheet.shadow.right.width * o.backing_scale);
@@ -950,7 +951,7 @@ var phh = phh || {};
               o.state.pause_while_ui_visible = false;
               $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
               _ui.paint();
-              
+
               // pause before perhaps (if looping is on) transitioning to the next slide
               o.engine.pause();
             },
@@ -1012,6 +1013,7 @@ var phh = phh || {};
 
               // draw footer
               //  footer bg
+							_ui.footer.cx.clearRect(0, 0, _ui.footer.cv.width, _ui.footer.cv.height);
               _ui.footer.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
 
               //  show / hide
@@ -1071,10 +1073,7 @@ var phh = phh || {};
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
 
-console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collision);
-
-
-
+// console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collision);
 
 
               // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
@@ -1098,22 +1097,22 @@ console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collis
               // ignore collision
               // this only responds to 'end', responding to 'start'
               // is fun, because of the 'end'+show_hide that could immediately follow and undo the show
-              // probably need a latch      
+              // probably need a latch
               if (_ui.mode.touched && !ui.visible && (_ui.mode.touchtype === 'end')) {
                 _ui.show();
                 return;
               }
-              
-              
-              
+
+
+
               // if a pad has been collided with
               if (_ui.last_collision) {
                 if (_ui.mode.hover) { // .hovered
-                
-console.log('processLoc: hover: ');
+
+// console.log('processLoc: hover: ');
 
                   if (_ui.mode.mouse === 'upped') {
-                    
+
                     switch (_ui.last_collision) {
                       case 'prev':
                         if (ui.visible) {
@@ -1167,7 +1166,7 @@ console.log('processLoc: hover: ');
                     case 'end':
                       // the only one currently called as processLoc in handler
 
-console.log('processLoc: end: ' + ui.visible);
+// console.log('processLoc: end: ' + ui.visible);
 
                       switch (_ui.last_collision) {
                         case 'prev':
@@ -1189,8 +1188,8 @@ console.log('processLoc: end: ' + ui.visible);
                           }
                           break;
                         case 'play_pause':
-                          
-console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);                         
+
+// console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
                           if (ui.visible) {
                             o.state.looping = !o.state.looping;
 
@@ -1292,13 +1291,13 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               list: [],
               addToList: function () {
                 var blip;
-                
+
                 blip = {
                   id: '',
                   counter: 0,
                   target_states: {} // on, activated, deserted
                 };
-                
+
                 this.list.push(blip);
               }
             }
@@ -1311,14 +1310,14 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               // runs once only
               // called by callback on first image load
               var tilesheetLoaded;
-              
+
               // import footer height into ui from settings, and
               // if required multiply by backing scale
               ui.footer_height = {
                 device: (o.backing_scale === 1) ? o.settings.footer_height : o.settings.footer_height * o.backing_scale,
                 css: o.settings.footer_height
               };
-              
+
               _ui.make.init();
 
               // scale up the button icons if hi-res or retina
@@ -1330,38 +1329,33 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height.device;
-     
+
               _ui.footer.cv = $('canvas.' + the.prefs.slides_ui_constant_class, $wrapper)[0];
               _ui.footer.cx = _ui.footer.cv.getContext("2d");
               _ui.footer.cv.width = _ui.cv.width;
               _ui.footer.cv.height = _ui.cv.height;
-              
-                                   
+
+
 console.log('init: ' + ui.footer_height);
-             
+
               var ui_css = {
                 width: o.display.css.width,
                 height: o.display.css.height + ui.footer_height.css
               };
-              
+
               $(_ui.cv).css(ui_css);
               $(_ui.footer.cv).css(ui_css);
-              
-              
-              
-              
-              
-              
+
               _ui.touch_collider = phh.collider();
               _ui.mouse_collider = phh.collider();
 
               _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
-              
+
               // must hide ui before painting it for the first time
               if (!ui.visible) {
                 $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
               }
-              
+
               // load o.settings.tilesheet
               // and fire callback once it's loaded
               // load in tilesheet, and run a callback to process it once it has loaded
@@ -1369,11 +1363,11 @@ console.log('init: ' + ui.footer_height);
                 _ui.make.footer(); // makes footer from tilesheet source
                 _ui.tilesheet.ready = true;
                 _ui.paint();
-                
+
                 // hiding during init should have been instantaneous,
                 // but now apply a smoothing transition-duration by css
                 $(_ui.cv).addClass('slides-ui-smooth');
-                
+
                 // todo: remove this commented out line
                 // just for testing proto $('.wrapper').append(_ui.make.cv);
               };
@@ -1391,17 +1385,19 @@ console.log('init: ' + ui.footer_height);
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height.device;
 
-console.log('resize: ' + ui.footer_height);
-             
+						 _ui.footer.cv.width = _ui.cv.width;
+             _ui.footer.cv.height = _ui.cv.height;
+
+
               var ui_css = {
                 width: o.display.css.width,
                 height: o.display.css.height + ui.footer_height.css
               };
-              
+
               $(_ui.cv).css(ui_css);
               $(_ui.footer.cv).css(ui_css);
-              
-              
+
+
               // could there be a race condition where this runs before ui.init() ?
               // dont want to make buttons or footer if there could be!
               // todo: test for this

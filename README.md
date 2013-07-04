@@ -24,7 +24,7 @@ Pull requests for the javascript or css will not be sought before I reach a work
 * port Drupal 7 module to Drupal 8
 
 * debug
-    * new rendering bug on resize
+    * -
 
 * touch feedback
     * signal on touch start, perhaps followed by a fadeout and shape change
