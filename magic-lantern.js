@@ -59,6 +59,10 @@ var phh = phh || {};
   phh.magic_lantern = {
     // version: 0.3
     //
+    // naming:
+    //   bg == background
+    //   fg == foreground
+    //
     prefs: {
       slides_selector: '#block-views-front-page-slideshow-block',
       slide_frame_selector: '.view-content',
@@ -917,6 +921,8 @@ var phh = phh || {};
               o.state.pause_while_ui_visible = false;
               $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
               _ui.paint();
+              
+              // pause before perhaps (if looping is on) transitioning to the next slide
               o.engine.pause();
             },
             paint: function () {
@@ -1057,6 +1063,9 @@ console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collis
               // if a pad has been collided with
               if (_ui.last_collision) {
                 if (_ui.mode.hover) { // .hovered
+                
+console.log('processLoc: hover: ');
+
                   if (_ui.mode.mouse === 'upped') {
                     
                     switch (_ui.last_collision) {
@@ -1134,6 +1143,8 @@ console.log('processLoc: end: ');
                           }
                           break;
                         case 'play_pause':
+                          
+console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);                         
                           if (ui.visible) {
                             o.state.looping = !o.state.looping;
 
@@ -1231,7 +1242,7 @@ console.log('processLoc: end: ');
           };
 
           ui = {
-            visible: null,
+            visible: false,
             footer_height: 40, // todo: move this to o.settings?
             init: function () {
               // runs once only
@@ -1259,17 +1270,24 @@ console.log('processLoc: end: ');
               _ui.mouse_collider = phh.collider();
 
               _ui.make.buttons(); // doesn’t need to wait for tilesheet to load, but must run before paint()
-
+              
+              // must hide ui before painting it for the first time
+              if (!ui.visible) {
+                $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
+              }
+              
               // load o.settings.tilesheet
               // and fire callback once it's loaded
               // load in tilesheet, and run a callback to process it once it has loaded
               tilesheetLoaded = function () {
                 _ui.make.footer(); // makes footer from tilesheet source
                 _ui.tilesheet.ready = true;
-
-                // todo: should only paint if visible!
                 _ui.paint();
-
+                
+                // hiding during init should have been instantaneous,
+                // but now apply a smoothing transition-duration by css
+                $(_ui.cv).addClass('slides-ui-smooth');
+                
                 // todo: remove this commented out line
                 // just for testing proto $('.wrapper').append(_ui.make.cv);
               };
