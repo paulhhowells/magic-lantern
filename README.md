@@ -1,7 +1,7 @@
 magic-lantern
 =============
 
-version: 0.0 - unfinished
+version: 0.3 - unfinished
 
 ## description
 * a canvas based slideshow providing beautiful dissolves
@@ -22,3 +22,17 @@ Pull requests for the javascript or css will not be sought before I reach versio
 * test on a Windows 8 device with simultaneous touch and mouse events
 * wrap in a Drupal 7 module
 * port Drupal 7 module to Drupal 8
+
+* touch feedback
+  * signal on touch start, perhaps followed by a fadeout and shape change
+  * signal on touch end and leaving button area
+  
+* debug
+  * touch play pause control
+  * iphone retina ui graphics have stopped displaying
+  
+* features
+  * add touch swipe to trigger next and previous
+  * when slide is (wrapped in) a link discover and present url
+  
+  

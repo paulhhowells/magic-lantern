@@ -1036,6 +1036,8 @@ var phh = phh || {};
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
 
+console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collision);
+
               // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
               // if (el.style) el.style.cursor='pointer'
               // in tests only shows up on desktop / mouse
@@ -1056,6 +1058,7 @@ var phh = phh || {};
               if (_ui.last_collision) {
                 if (_ui.mode.hover) { // .hovered
                   if (_ui.mode.mouse === 'upped') {
+                    
                     switch (_ui.last_collision) {
                       case 'prev':
                         if (ui.visible) {
@@ -1108,6 +1111,8 @@ var phh = phh || {};
                   switch (_ui.mode.touchtype) {
                     case 'end':
                       // the only one currently called as processLoc in handler
+
+console.log('processLoc: end: ');
 
                       switch (_ui.last_collision) {
                         case 'prev':
@@ -1163,12 +1168,6 @@ var phh = phh || {};
                   }
                 } // /.touch
               }
-
-              // if (!ui.visible) {
-              //   _ui.show();
-              // } else {
-              //   _ui.paint();
-              // }
 
               // todo: paint before show()
               //if (ui.visible) {
@@ -1349,12 +1348,11 @@ var phh = phh || {};
                 var loc;
                 _ui.mode.touched = true;
                 _ui.mode.touchtype = 'start';
-//console.log('touch start');
-                // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
+console.log('touch start');
 
                 // triggers transition ERROR ?
-                //loc = _ui.getTouchLoc(tv);
-                //_ui.processLoc(loc);
+                loc = _ui.getTouchLoc(tv);
+                _ui.processLoc(loc);
 
                 // disable panning etc.
                 tv.preventDefault();
@@ -1362,13 +1360,13 @@ var phh = phh || {};
               move: function (tv) {
                 _ui.mode.touchtype = 'move';
 //console.log('touch move');
-                // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
+
                 tv.preventDefault();
               },
               end: function (tv) {
-                //var loc = _ui.touchRecordXY(tv);
+console.log('touch end');
                 var loc = _ui.getTouchLoc(tv);
-//console.log('touch end');
+
                 _ui.mode.touchtype = 'end';
                 _ui.processLoc(loc);
 
