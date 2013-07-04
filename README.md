@@ -1,7 +1,7 @@
 magic-lantern
 =============
 
-version: 0.3 - unfinished
+version: 0.4 - unfinished
 
 ## description
 * a canvas based slideshow providing beautiful dissolves
@@ -24,11 +24,13 @@ Pull requests for the javascript or css will not be sought before I reach a work
 * port Drupal 7 module to Drupal 8
 
 * debug
-    * iphone retina ui footer graphics
+    * -
 
 * touch feedback
     * signal on touch start, perhaps followed by a fadeout and shape change
     * signal on touch end and leaving button area
+
+* refactor!
 
 * features
     * add touch swipe to trigger next and previous

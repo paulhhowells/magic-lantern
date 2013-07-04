@@ -70,7 +70,7 @@ var phh = phh || {};
       slides_bg_class: 'slides-bg', // background
       slides_fg_class: 'slides-fg', // foreground
       slides_ui_class: 'slides-ui',
-      slides_ui_constant_class: 'slides-ui-constant', // todo: find a better name for this
+      slides_ui_constant_class: 'slides-ui-bg', // todo: find a better name for this
       slides_ui_hidden_class: 'slides-ui-hidden',
       transition: {
         duration : 2100, // milliseconds
@@ -143,7 +143,8 @@ var phh = phh || {};
           pause : 3000, //8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
-          }
+          },
+          footer_height: 40  // at x1
         },
         backing_scale: null,
         backing_store_ratio: null,
@@ -437,7 +438,7 @@ var phh = phh || {};
           _ui = {
             cv: null,
             cx: null,
-            footer: {
+            footer: { // change to bg
               cv: null,
               cx: null
             },
@@ -454,6 +455,8 @@ var phh = phh || {};
             tilesheet: {
               ready: false,
               img: new Image(), // to load tilesheet into
+              
+              // move into .dimensions
               shadow: {
                 left:  {x: 144, y: 0, width: 5, height: 5},
                 mid:   {x: 149, y: 0, width: 1, height: 5},
@@ -485,6 +488,32 @@ var phh = phh || {};
                 this.cv = document.createElement('canvas');
                 this.cx = this.cv.getContext('2d');
                 this.buttons.init();
+                
+                // if backing scale requires it, go through tilesheet and scale
+                // scale up tilesheet dimensions, used by make.footer(), _ui.paint(), _ui.buttons()
+                // move this into tilesheet.init?
+                
+                // todo: refactor!!!
+                
+                var scale = function (o, scale) {
+                  var p;
+                  
+                  for (p in o) {
+                    if (o.hasOwnProperty(p)) {
+                      o[p] = o[p] * scale;   
+                    }
+                  }
+                };
+                
+                if (o.backing_scale !== 1) {
+                  scale(_ui.tilesheet.shadow.left, o.backing_scale);
+                  scale(_ui.tilesheet.shadow.mid, o.backing_scale);
+                  scale(_ui.tilesheet.shadow.right, o.backing_scale);
+                  
+                  scale(_ui.tilesheet.footer_tab, o.backing_scale);
+                  scale(_ui.tilesheet.show, o.backing_scale);
+                  scale(_ui.tilesheet.hide, o.backing_scale);
+                }
               },
               footer: function () {
                 // make footer background
@@ -504,17 +533,17 @@ var phh = phh || {};
                 // set dimensions and clear the make scratchpad canvas
                 cv.width = _ui.cv.width;
                 cv.height = tilesheet_img.height;
-
+   
                 // calculate where to draw the shadow
                 x_left = 0;
-                x_right = cv.width - _ui.tilesheet.shadow.right.width;
-                x_mid = x_left + _ui.tilesheet.shadow.left.width;
+                x_right = cv.width - _ui.tilesheet.shadow.right.width; // (_ui.tilesheet.shadow.right.width * o.backing_scale);
+                x_mid = x_left + _ui.tilesheet.shadow.left.width; //) * o.backing_scale;
                 width_mid = x_right - x_mid;
 
                 // calculate the x location to draw the tab graphic from
                 x_footer_tab = Math.round((cv.width - _ui.tilesheet.footer_tab.width) / 2);
                 y_footer_tab = 0;
-
+// debugger;
                 // draw shadow
                 cx.drawImage(
                   tilesheet_img,
@@ -937,7 +966,7 @@ var phh = phh || {};
               chrome_state = {
                   prev: 'plain',
                   next: 'plain',
-                  play_pause: 'plain',
+                  play_pause: 'plain'
                 };
               play_pause = (o.state.looping) ? 'pause' : 'play';
 
@@ -1016,8 +1045,8 @@ var phh = phh || {};
               // called by: mouse.move() mouse.up() touch.end()
               // requires:
               //   _ui.collider.collisionTest
-              // todo: only call by mouse or touch if something has changed
-              // todo: touch and mouse very similar, look for opportunities to refactor
+              // todo: only call by mouse or touch if something has changed?
+              // todo: lots of refactoring to do here
               var device_loc;
 
               // css_loc could be a location object or FALSE
@@ -1127,7 +1156,7 @@ console.log('processLoc: hover: ');
                         break;
                       case 'link':
                         break;
-                    };
+                    }
                   } // /.mouse upped
                 } // /.hover
 
@@ -1277,12 +1306,19 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
 
           ui = {
             visible: false,
-            footer_height: 40, // todo: move this to o.settings?
+            footer_height: {},
             init: function () {
               // runs once only
               // called by callback on first image load
               var tilesheetLoaded;
-
+              
+              // import footer height into ui from settings, and
+              // if required multiply by backing scale
+              ui.footer_height = {
+                device: (o.backing_scale === 1) ? o.settings.footer_height : o.settings.footer_height * o.backing_scale,
+                css: o.settings.footer_height
+              };
+              
               _ui.make.init();
 
               // scale up the button icons if hi-res or retina
@@ -1293,13 +1329,29 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               _ui.cv = $('canvas.' + the.prefs.slides_ui_class, $wrapper)[0];
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
-              _ui.cv.height = o.display.background.cv.height + ui.footer_height;
-
+              _ui.cv.height = o.display.background.cv.height + ui.footer_height.device;
+     
               _ui.footer.cv = $('canvas.' + the.prefs.slides_ui_constant_class, $wrapper)[0];
               _ui.footer.cx = _ui.footer.cv.getContext("2d");
               _ui.footer.cv.width = _ui.cv.width;
               _ui.footer.cv.height = _ui.cv.height;
-
+              
+                                   
+console.log('init: ' + ui.footer_height);
+             
+              var ui_css = {
+                width: o.display.css.width,
+                height: o.display.css.height + ui.footer_height.css
+              };
+              
+              $(_ui.cv).css(ui_css);
+              $(_ui.footer.cv).css(ui_css);
+              
+              
+              
+              
+              
+              
               _ui.touch_collider = phh.collider();
               _ui.mouse_collider = phh.collider();
 
@@ -1333,16 +1385,23 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               _ui.addHandlers();
             },
             resize: function () {
-              // o.resizeCanvas used to call these
-              // o.ui.calculateSizes();
-              // o.ui.paint();
 
               // need to reset dimensions, but also to clear the canvas before painting (which is a byproduct of setting dims)
               // do this before make.buttons and/or make.footer due to a dependency one (or both) of them has
               _ui.cv.width = o.display.background.cv.width;
-              _ui.cv.height = o.display.background.cv.height + ui.footer_height;
+              _ui.cv.height = o.display.background.cv.height + ui.footer_height.device;
 
-
+console.log('resize: ' + ui.footer_height);
+             
+              var ui_css = {
+                width: o.display.css.width,
+                height: o.display.css.height + ui.footer_height.css
+              };
+              
+              $(_ui.cv).css(ui_css);
+              $(_ui.footer.cv).css(ui_css);
+              
+              
               // could there be a race condition where this runs before ui.init() ?
               // dont want to make buttons or footer if there could be!
               // todo: test for this
