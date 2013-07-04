@@ -14,8 +14,8 @@ version: 0.3 - unfinished
 Using jQuery 1.5 for Drupal 7 compatibility
 
 ## open source
-Help to wrap this in a Drupal module would be very welcome.
-Pull requests for the javascript or css will not be sought before I reach version 1.0.
+Help to wrap this in a Drupal module would be very welcome, as would any comments or suggestions.
+Pull requests for the javascript or css will not be sought before I reach a working version 1.0.
 
 ## to do
 * test on Android
@@ -24,8 +24,7 @@ Pull requests for the javascript or css will not be sought before I reach versio
 * port Drupal 7 module to Drupal 8
 
 * debug
-    * touch play pause control
-    * iphone retina ui graphics have stopped displaying
+    * iphone retina ui footer graphics
 
 * touch feedback
     * signal on touch start, perhaps followed by a fadeout and shape change
