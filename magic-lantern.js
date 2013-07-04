@@ -57,16 +57,16 @@ var phh = phh || {};
   };
 
   phh.magic_lantern = {
-    // version: 0.2
+    // version: 0.3
     //
     prefs: {
       slides_selector: '#block-views-front-page-slideshow-block',
       slide_frame_selector: '.view-content',
       slide_selector: '.views-row',
-      slides_base_class: 'slides-base',
-      slides_overlay_class: 'slides-overlay',
+      slides_bg_class: 'slides-bg', // background
+      slides_fg_class: 'slides-fg', // foreground
       slides_ui_class: 'slides-ui',
-			slides_ui_footer_class: 'slides-ui-footer',
+      slides_ui_constant_class: 'slides-ui-constant', // todo: find a better name for this
       slides_ui_hidden_class: 'slides-ui-hidden',
       transition: {
         duration : 2100, // milliseconds
@@ -114,23 +114,21 @@ var phh = phh || {};
         $wrapper,
         THREESIXTY = (Math.PI / 180) * 360;
 
-// console.log('canvas_slideshow');
-
       $wrapper = $(slideshow_container);
       $wrapper.
         wrapInner('<canvas/>'). // wrap contents of selector in canvas
         addClass('slides');
 
-      $('canvas', $wrapper).addClass(the.prefs.slides_base_class);
+      $('canvas', $wrapper).addClass(the.prefs.slides_bg_class);
 
       $('<canvas />').
-        addClass(the.prefs.slides_overlay_class).
+        addClass(the.prefs.slides_fg_class).
         appendTo($wrapper);
-      
+
       $('<canvas />').
-	      addClass(the.prefs.slides_ui_footer_class).
-	      appendTo($wrapper);
-      
+        addClass(the.prefs.slides_ui_constant_class).
+        appendTo($wrapper);
+
       $('<canvas />').
         addClass(the.prefs.slides_ui_class).
         appendTo($wrapper);
@@ -165,8 +163,6 @@ var phh = phh || {};
           //   });
           // });
 
-console.log('o.init');
-
           // build slides array and imgs array
           $(the.prefs.slide_selector, $wrapper).each(function () {
             var img = {
@@ -179,13 +175,7 @@ console.log('o.init');
             });
           });
 
-          // get references to the canvas within the dom
-          //o.canvas = $('canvas', $wrapper)[0];
-          //o.context = o.canvas.getContext("2d");
-
           o.display.init();
-
-// fg equivalent to o.overlay
 
           // convert transition percentages into decimals
           o.settings.transition.start.x =      o.settings.transition.start.x * 0.01;
@@ -213,8 +203,6 @@ console.log('o.init');
           // var first_img = o.slides[0].img;
           // this must be the wrong image to repaint with (most of the time)
           // so pick the correct image or replace with a 'paint' function that paints the right thing
-
-// console.log('o.resize');
 
           o.display.updateSize();
           o.ui.resize();
@@ -281,7 +269,6 @@ console.log('o.init');
             }, o.settings.pause);
           },
           transition: function () {
-// console.log('transition');
             var
               transition_id,
               transition_func,
@@ -293,7 +280,6 @@ console.log('o.init');
             if (o.state.transitioning) {console.log('transition ERROR');}
 
             o.state.transitioning = true;
-
             o.display.background.paint();
 
             transition_func = function () {
@@ -323,7 +309,6 @@ console.log('o.init');
                 o.display.foreground.cv.height = ~~o.display.foreground.height;
               }
 
-              // o.display.background.paint();
               o.display.foreground.paint();
 
               if (current_time > finish) {
@@ -356,34 +341,27 @@ console.log('o.init');
           init: function () {
             // called by: o.init()
 
-console.log('display.init');
-
-            o.display.background.cv = $('canvas.' + the.prefs.slides_base_class, $wrapper)[0];
+            o.display.background.cv = $('canvas.' + the.prefs.slides_bg_class, $wrapper)[0];
             o.display.background.cx = o.display.background.cv.getContext("2d");
             o.display.background.cx.globalAlpha = 1;
 
-            o.display.foreground.cv = $('canvas.' + the.prefs.slides_overlay_class, $wrapper)[0];
+            o.display.foreground.cv = $('canvas.' + the.prefs.slides_fg_class, $wrapper)[0];
             o.display.foreground.cx = o.display.foreground.cv.getContext("2d");
           },
-          css: {}, // defined by: updateSize(), used by:
+          // todo: move display.css into updateSize() as a var
+          css: {}, // defined by: and only used by: updateSize()
           updateSize: function () {
             var
               img,
               wrapper_width;
             // this === o.display
 
-// console.log('display.updateSize');
-
-            // img = o.imgs[0];
             img = o.slides[0].img;
-
             wrapper_width = $wrapper.width();
 
-            // todo: check in the code if these properties are used elsewhere
+            // todo: check if these (img.width) properties are used elsewhere
             //img.width = img.el.width;
             //img.height = img.el.height;
-//console.log(img.el.width);
-//console.log(img.el.height);
 
             o.display.css = {
                 width: wrapper_width, // can assume it's already an integer
@@ -408,7 +386,6 @@ console.log('display.init');
             // width: null,
             // height: null
             paint: function () {
-// console.log('paint current' + o.engine.looping.current);
               // this == o.display.background
 
               o.display.background.cx.drawImage(
@@ -429,8 +406,8 @@ console.log('display.init');
             width: null,
             height: null,
             paint: function () {
-// console.log('paint next' + o.engine.looping.next);
               // this == o.display.foreground
+
               o.display.foreground.cx.clearRect(0, 0, o.display.foreground.cv.width, o.display.foreground.cv.height);
 
               o.display.foreground.cx.globalAlpha = o.display.foreground.opacity;
@@ -444,28 +421,10 @@ console.log('display.init');
             }
           },
           paint: function () {
-// console.log('o.display.paint');
-
             o.display.background.paint();
             o.display.foreground.paint();
           }
         }, /// display
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         ui: (function () {
           var
             _ui,
@@ -474,19 +433,18 @@ console.log('display.init');
           _ui = {
             cv: null,
             cx: null,
-						footer: {
-	            cv: null,
-	            cx: null
-						},
+            footer: {
+              cv: null,
+              cx: null
+            },
             mode: {
               touched: null,
               touchtype : '',
               hovered: null,
               mouse : '',
-              hover: false,
-              //ui_visible_pause: false
+              hover: false
             },
-            last_collision: false, // processLoc() paint()
+            last_collision: false, // used by: processLoc() paint()
             touch_collider: null,
             mouse_collider: null,
             tilesheet: {
@@ -518,15 +476,15 @@ console.log('display.init');
               cv: null, // a scratchpad canvas for use by make
               cx: null,
               init: function () {
-console.log('_ui.make.init');
                 // this == _ui.make
+
                 this.cv = document.createElement('canvas');
                 this.cx = this.cv.getContext('2d');
-
                 this.buttons.init();
               },
               footer: function () {
                 // make footer background
+
                 var
                   cv = _ui.make.cv,
                   cx = _ui.make.cx,
@@ -538,8 +496,6 @@ console.log('_ui.make.init');
                   width_mid,
                   x_footer_tab,
                   y_footer_tab;
-
-console.log('make.footer');
 
                 // set dimensions and clear the make scratchpad canvas
                 cv.width = _ui.cv.width;
@@ -639,8 +595,7 @@ console.log('make.footer');
                       width: 15, height: 21,
                       arr: [[0, 0], [0, 21], [6, 21], [6, 0], [0, 0], [9, 0], [9, 21], [15, 21], [15, 0], [9, 0]],
                       centre: {}
-                    },
-                    // todo: remove this? show_hide: {}
+                    }
                   }
                 };
 
@@ -661,15 +616,12 @@ console.log('make.footer');
                     half_centre_width,
                     half_height,
                     buttons_y,
-                    gr; // gradient
+                    gr;
 
                   cv.height = _buttons.button_height;
                   one_third_width = ~~(_ui.cv.width / 3);
                   centre_width = _ui.cv.width - (one_third_width * 2);
-                  //play_pause_width = one_third_width - _buttons.gap_between_buttons;
-
                   prev_next_width = one_third_width - _buttons.gap_between_buttons;
-
                   half_centre_width = ~~(centre_width / 2);
                   half_height = ~~(cv.height / 2);
                   buttons_y = o.display.background.cv.height - _buttons.button_height;
@@ -714,7 +666,7 @@ console.log('make.footer');
                   _ui.chrome.prev.hover = cx.getImageData(0, 0, cv.width, cv.height);
 
                   // next button
-                  _ui.chrome.next.x = _ui.cv.width - prev_next_width; // - cv.width;
+                  _ui.chrome.next.x = _ui.cv.width - prev_next_width;
                   _ui.chrome.next.y = buttons_y;
                   cv.width = prev_next_width;
                   cx.fillStyle = gr;
@@ -755,15 +707,12 @@ console.log('make.footer');
                   _ui.make.darkenIcon(cx, _buttons.icon.pause, _defaults.hovered_icon_fill_style);
                   _ui.chrome.pause.hover = cx.getImageData(0, 0, cv.width, cv.height);
 
-
-
                   // register collisions for buttons
                   // make use of a var pad?
                   _ui.touch_collider.clear();
                   _ui.mouse_collider.clear();
 
-//debugger;
-                  // todo: make id implicit
+                  // todo: make id implicit?
                   _buttons.pad_collision = {
                     touch: {
                       prev: {
@@ -827,15 +776,12 @@ console.log('make.footer');
                     }
                   };
 
-//console.log(_buttons.pad);
-//console.log('ht: ' + o.display.background.cv.height);
-                  
                   // todo: make a loop out of registration
                   _ui.touch_collider.register(_buttons.pad_collision.touch.prev);
                   _ui.touch_collider.register(_buttons.pad_collision.touch.play_pause);
                   _ui.touch_collider.register(_buttons.pad_collision.touch.next);
                   _ui.touch_collider.register(_buttons.pad_collision.touch.show_hide);
-                  
+
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.prev);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.play_pause);
                   _ui.mouse_collider.register(_buttons.pad_collision.mouse.next);
@@ -846,7 +792,6 @@ console.log('make.footer');
                 };
 
                 f.init = function () {
-//console.log('buttons.init');
                   _buttons.gap_between_buttons = (o.backing_scale === 1) ? 1 : ~~(o.backing_scale); // an integer for a crisply rendered line
                   _buttons.edge_offset = (o.backing_scale === 1) ? 45 : 45 * o.backing_scale;
                   _buttons.button_height = (o.backing_scale === 1) ? _defaults.button_height : _defaults.button_height * o.backing_scale;
@@ -857,7 +802,7 @@ console.log('make.footer');
                   }
                   _buttons.icon = _defaults.icon;
 
-									// transfer f to _buttons ?
+                  // transfer f to _buttons ?
                   f.gap_between_buttons = _buttons.gap_between_buttons;
                 };
                 return f;
@@ -866,6 +811,7 @@ console.log('make.footer');
                 // scale up icons when they need to match a backing scale > 1
                 // arguments: icons is an object, passed by reference
                 // so this should only be called once from an init()
+                // notes: test for backing_scale === 1 before calling
                 var
                   icon,
                   button,
@@ -873,8 +819,6 @@ console.log('make.footer');
                   i,
                   i_loc,
                   length;
-
-console.log('make.scaleIcons');
 
                 //if (o.backing_scale !== 1) {
                 for (button_name in icons) {
@@ -906,19 +850,18 @@ console.log('make.scaleIcons');
                 //}
 
                 return icons; // returns reference not value!
-//console.log('/make.scaleIcons');
               },
               cutIcon: function (cx, icon) {
                 // cut an icon shape out of a shape drawn on the canvas
                 // requires: coordinates that overlap and are anti clockwise
                 // called by: cutStaticButton(), cutHoverButton(), darkenIcon()
+
                 var
                   i,
                   i_x, i_y,
                   x, y,
                   length;
 
-//console.log('make.cutIcon');
                 x = icon.x;
                 y = icon.y;
 
@@ -934,10 +877,8 @@ console.log('make.scaleIcons');
                   i_y = y + icon.arr[i][1];
                   cx.lineTo(i_x, i_y);
                 }
-//console.log('/make.cutIcon');
               },
               cutStaticButton: function (cv, cx, icon) {
-//console.log('cutStaticButton');
                 cx.beginPath();
                 cx.rect(0, 0, cv.width, cv.height); // clockwise
                 _ui.make.cutIcon(cx, icon);
@@ -946,7 +887,7 @@ console.log('make.scaleIcons');
               },
               cutHoverButton: function (cx, icon, half_height, fill_style) {
                 // arguments: fill_style is optional, defaults to white
-//console.log('cutHoverButton');
+
                 var radius = half_height - 2;
                 cx.fillStyle = fill_style || "#fff";
                 cx.beginPath();
@@ -956,8 +897,8 @@ console.log('make.scaleIcons');
                 cx.closePath();
               },
               darkenIcon: function (cx, icon, fill_style) {
-//console.log('darkenIcon');
                 // arguments: fill_style is optional
+
                 cx.fillStyle = fill_style || 'rgba(0, 0, 0, 0.4)';
                 cx.beginPath();
                 _ui.make.cutIcon(cx, icon);
@@ -965,36 +906,20 @@ console.log('make.scaleIcons');
                 cx.closePath();
               }
             },
-
-
-
-
-
-
             show: function () {
               ui.visible = true;
               o.state.pause_while_ui_visible = true;
-
-// console.log('show: ' + o.state.looping);
-
               _ui.paint();
               $(_ui.cv).removeClass(the.prefs.slides_ui_hidden_class);
             },
             hide: function () {
               ui.visible = false;
               o.state.pause_while_ui_visible = false;
-
-// console.log('hide: ' + o.state.looping);
-
               $(_ui.cv).addClass(the.prefs.slides_ui_hidden_class);
               _ui.paint();
-
               o.engine.pause();
             },
-            paint: function () {         
-// console.log('_ui.paint');
-// console.log('paint _ui.last_collision: ' + _ui.last_collision);
-              
+            paint: function () {
               // draw controls
               //  prev
               //  play_pause
@@ -1050,7 +975,6 @@ console.log('make.scaleIcons');
               _ui.cx.fill();
               _ui.cx.closePath();
 
-
               // draw footer
               //  footer bg
               _ui.footer.cx.putImageData(_ui.chrome.footer, 0, o.display.background.cv.height);
@@ -1067,7 +991,7 @@ console.log('make.scaleIcons');
                   _ui.chrome.show_hide.y,
                   _ui.tilesheet.hide.width,
                   _ui.tilesheet.hide.height
-                );            
+                );
               } else {
                 _ui.footer.cx.drawImage(
                   _ui.tilesheet.img,
@@ -1081,15 +1005,13 @@ console.log('make.scaleIcons');
                   _ui.tilesheet.show.height
                 );
               }
-              
-
             },
             processLoc: function (css_loc) {
               // called by: mouse.move() mouse.up() touch.end()
               // requires:
               //   _ui.collider.collisionTest
               // todo: only call by mouse or touch if something has changed
-              // todo: touch and mouse very similar, look for opportunity to refactor            
+              // todo: touch and mouse very similar, look for opportunity to refactor
               var device_loc;
 
               // css_loc could be a location object or FALSE
@@ -1107,29 +1029,21 @@ console.log('make.scaleIcons');
                 device_loc = css_loc;
               }
 
+              // prefer to test for touch over mouse
               if (_ui.mode.touched) {
-
-
                 _ui.last_collision = _ui.touch_collider.collisionTest(device_loc);
-
-//console.log('processLoc 1: touched: ' + device_loc.x  + ' ' + device_loc.y + ' ' + _ui.last_collision);
               } else {
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
 
-// console.log('processLoc: ' + device_loc.x + ' ' + device_loc.y + ' | ' + _ui.last_collision);
-
-//console.log('processLoc 2: touched: ' + _ui.mode.touched +' last_c: '+ _ui.last_collision);
-              
-              
               // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
               // if (el.style) el.style.cursor='pointer'
               // in tests only shows up on desktop / mouse
               // todo: create show_hide collision pad from bitmap (x1 & x2) ?
               switch (_ui.last_collision) {
                 case 'prev':
-                case 'next':  
-                case 'play_pause':  
+                case 'next':
+                case 'play_pause':
                 case 'show_hide':
                   $(_ui.cv).addClass('slides-ui-pointer');
                   break;
@@ -1137,38 +1051,41 @@ console.log('make.scaleIcons');
                   $(_ui.cv).removeClass('slides-ui-pointer');
                   break;
               }
-              
+
               // if a pad has been collided with
               if (_ui.last_collision) {
-                if (_ui.mode.hover) { // .hovered 
+                if (_ui.mode.hover) { // .hovered
                   if (_ui.mode.mouse === 'upped') {
                     switch (_ui.last_collision) {
                       case 'prev':
-                        o.state.looping = false;
-                        if (!o.state.transitioning) {
-                          o.engine.dec();
-                          o.engine.transition();
+                        if (ui.visible) {
+                          o.state.looping = false;
+                          if (!o.state.transitioning) {
+                            o.engine.dec();
+                            o.engine.transition();
+                          }
                         }
                         break;
                       case 'next':
-                        o.state.looping = false;
-                        if (!o.state.transitioning) {
-                          o.engine.inc();
-                          o.engine.transition();
+                        if (ui.visible) {
+                          o.state.looping = false;
+                          if (!o.state.transitioning) {
+                            o.engine.inc();
+                            o.engine.transition();
+                          }
                         }
                         break;
                       case 'play_pause':
-                        o.state.looping = !o.state.looping;
+                        if (ui.visible) {
+                          o.state.looping = !o.state.looping;
 
-// console.log('play_pause: ' + o.state.looping);
-
-                        // if looping has been reinstated then will need to restart loop
-                        // beyond ui signalisation, how should this be done?
-                        // should this trigger a transformation?
-                        // transformations will not currently run while ui is showing
-                        if (o.state.looping) {
-                          o.state.pause_while_ui_visible = false;
-                          o.engine.fast_loop_restart();
+                          // if looping has been reinstated then restart looping to signal this fact
+                          if (o.state.looping) {
+                            o.state.pause_while_ui_visible = false;
+                            if (!o.state.transitioning) {
+                              o.engine.fast_loop_restart();
+                            }
+                          }
                         }
                         break;
                       case 'show_hide':
@@ -1176,7 +1093,7 @@ console.log('make.scaleIcons');
                         if (!ui.visible) {
                           _ui.hide();
                         } else {
-                          _ui.show();  
+                          _ui.show();
                         }
                         break;
                       case 'link':
@@ -1188,13 +1105,9 @@ console.log('make.scaleIcons');
                 if (_ui.mode.touched) {
                   // touchstart / touchmove / touchend
 
-// console.log('processLoc 3: ' + _ui.mode.touchtype + ' ' + _ui.last_collision);
-
                   switch (_ui.mode.touchtype) {
                     case 'end':
                       // the only one currently called as processLoc in handler
-
-                      // need to test if ui visible!?
 
                       switch (_ui.last_collision) {
                         case 'prev':
@@ -1213,30 +1126,32 @@ console.log('make.scaleIcons');
                               o.engine.inc();
                               o.engine.transition();
                             }
-                          }                         
+                          }
                           break;
-												case 'play_pause':
-		                      if (ui.visible) {
-  		                      o.state.looping = !o.state.looping;
+                        case 'play_pause':
+                          if (ui.visible) {
+                            o.state.looping = !o.state.looping;
 
-  													if (o.state.looping) {
-  	                          o.state.pause_while_ui_visible = false;
-  	                          o.engine.fast_loop_restart();
-  	                        }               
-		                      }                      
-	                        break;
+                            if (o.state.looping) {
+                              o.state.pause_while_ui_visible = false;
+                              if (!o.state.transitioning) {
+                                o.engine.fast_loop_restart();
+                              }
+                            }
+                          }
+                          break;
                         case 'show_hide':
                           ui.visible = !ui.visible;
-                          
+
                           if (!ui.visible) {
                             _ui.hide();
                           } else {
                             //_ui.paint();
-                            _ui.show();  
+                            _ui.show();
                           }
                           break;
-	                      case 'link':
-	                        break;
+                        case 'link':
+                          break;
                       }
 
                       break;
@@ -1254,7 +1169,7 @@ console.log('make.scaleIcons');
               // } else {
               //   _ui.paint();
               // }
-              
+
               // todo: paint before show()
               //if (ui.visible) {
                 _ui.paint();
@@ -1294,14 +1209,10 @@ console.log('make.scaleIcons');
                 r.x = ~~(ev.pageX - offset.left);
                 r.y = ~~(ev.pageY - offset.top);
               }
-
-// console.log('getMouseLoc: ' + r.x + ' ' + r.y);
-
               return r;
             },
             addHandlers: function () {
               // called by: ui.init()
-// console.log('addHandlers');
               _ui.cv.addEventListener("touchstart",  ui.touch.start,  false);
               _ui.cv.addEventListener("touchmove",   ui.touch.move,   false);
               _ui.cv.addEventListener("touchend",    ui.touch.end,    false);
@@ -1320,14 +1231,6 @@ console.log('make.scaleIcons');
             }
           };
 
-
-
-
-
-
-
-
-
           ui = {
             visible: null,
             footer_height: 40, // todo: move this to o.settings?
@@ -1336,23 +1239,22 @@ console.log('make.scaleIcons');
               // called by callback on first image load
               var tilesheetLoaded;
 
-console.log('ui.init');
               _ui.make.init();
 
               // scale up the button icons if hi-res or retina
               if (o.backing_scale !== 1) {
                 _ui.make.scaleIcons(_ui.icon);
               }
-      
+
               _ui.cv = $('canvas.' + the.prefs.slides_ui_class, $wrapper)[0];
               _ui.cx = _ui.cv.getContext("2d");
               _ui.cv.width = o.display.background.cv.width;
               _ui.cv.height = o.display.background.cv.height + ui.footer_height;
 
-							_ui.footer.cv = $('canvas.' + the.prefs.slides_ui_footer_class, $wrapper)[0];
-							_ui.footer.cx = _ui.footer.cv.getContext("2d");
-							_ui.footer.cv.width = _ui.cv.width;
-							_ui.footer.cv.height = _ui.cv.height;
+              _ui.footer.cv = $('canvas.' + the.prefs.slides_ui_constant_class, $wrapper)[0];
+              _ui.footer.cx = _ui.footer.cv.getContext("2d");
+              _ui.footer.cv.width = _ui.cv.width;
+              _ui.footer.cv.height = _ui.cv.height;
 
               _ui.touch_collider = phh.collider();
               _ui.mouse_collider = phh.collider();
@@ -1376,13 +1278,10 @@ console.log('ui.init');
               _ui.tilesheet.img.onload = tilesheetLoaded;
               _ui.tilesheet.img.src = (o.backing_scale === 1) ? the.prefs.tilesheet_src.x1 : the.prefs.tilesheet_src.x2;
 
-              // while perhaps waiting for tilesheet to load
-
+              // perhaps while waiting for tilesheet to load
               _ui.addHandlers();
             },
             resize: function () {
-// console.log('ui.resize');
-
               // o.resizeCanvas used to call these
               // o.ui.calculateSizes();
               // o.ui.paint();
@@ -1448,14 +1347,14 @@ console.log('ui.init');
             touch: {
               start: function (tv) {
                 var loc;
-								_ui.mode.touched = true;
+                _ui.mode.touched = true;
                 _ui.mode.touchtype = 'start';
 //console.log('touch start');
                 // _ui.touchRecordXY(tv); // unnecessary if touchend delivers
 
-								// triggers transition ERROR ?
-								//loc = _ui.getTouchLoc(tv);
-								//_ui.processLoc(loc);
+                // triggers transition ERROR ?
+                //loc = _ui.getTouchLoc(tv);
+                //_ui.processLoc(loc);
 
                 // disable panning etc.
                 tv.preventDefault();
@@ -1531,7 +1430,6 @@ console.log('ui.init');
         // when time is up check that all images have loaded
         // if not then start animation when all images have loaded
         // when all images have loaded
-
 
         // phh.log('all loaded callback');
         // var date = Date.now ? Date.now() : +new Date; // lte IE8, unary + operator == valueOf
@@ -1742,7 +1640,6 @@ console.log('ui.init');
     // public properties:
     //  particles
 
-    //"use strict";
     var
       _c, // private
       c;  // public
@@ -1863,8 +1760,6 @@ console.log('ui.init');
         height = (options && options.height) ? options.height: 0;
         particle_type = (options && options.type) ? options.type : 'rect';
 
-// console.log('collider.register: x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height + ' ' + id_str);
-
         // add new id object to particles
         this.particles[id_str] = _c.newParticle(x, y, width, height, particle_type, id_str);
 
@@ -1872,7 +1767,6 @@ console.log('ui.init');
       },
       set: function (id_str, options) {},
       clear: function () {
-// console.log('collider.clear');
         this.particles = {};
         _c.lut = [];
         _c.id_int = 0;
@@ -1889,6 +1783,8 @@ console.log('ui.init');
         // returns:
         //   the collided particles id as a string (unless overridden by options), or false if none have occurred
 
+        // todo: return an array of collisions unless a single collision
+
         var
           collided = false,
           collisions = {},
@@ -1901,9 +1797,6 @@ console.log('ui.init');
           x = arguments[0].x;
           options = arguments[0].options; // should rename this more appropriately now
         }
-
-//console.log('collisionTest: ' + x + ' ' + y + ' touched: ');
-// + _ui.mode.touched);
 
         // return an array
         // loop through each particle and test for collision
@@ -1919,13 +1812,7 @@ console.log('ui.init');
         // return (collisions.length === 0) ? false : collisions;
 
         // check that LUT array contains indices before attempting to read them
-//console.log(_c.lut);
-
-//debugger;
-
         if ((_c.lut[x]) && (_c.lut[x][y])) {
-
-//console.log('y');
 
           // return an object (or false)
           lut_collisions_obj = _c.lut[x][y];
@@ -1963,6 +1850,5 @@ console.log('ui.init');
     };
     return c;
   };
-
 
 }(jQuery));
