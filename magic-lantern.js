@@ -1017,7 +1017,7 @@ var phh = phh || {};
               // requires:
               //   _ui.collider.collisionTest
               // todo: only call by mouse or touch if something has changed
-              // todo: touch and mouse very similar, look for opportunity to refactor
+              // todo: touch and mouse very similar, look for opportunities to refactor
               var device_loc;
 
               // css_loc could be a location object or FALSE
@@ -1044,6 +1044,10 @@ var phh = phh || {};
 
 console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collision);
 
+
+
+
+
               // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
               // if (el.style) el.style.cursor='pointer'
               // in tests only shows up on desktop / mouse
@@ -1060,6 +1064,19 @@ console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collis
                   break;
               }
 
+
+
+              // ignore collision
+              // this only responds to 'end', responding to 'start'
+              // is fun, because of the 'end'+show_hide that could immediately follow and undo the show
+              // probably need a latch      
+              if (_ui.mode.touched && !ui.visible && (_ui.mode.touchtype === 'end')) {
+                _ui.show();
+                return;
+              }
+              
+              
+              
               // if a pad has been collided with
               if (_ui.last_collision) {
                 if (_ui.mode.hover) { // .hovered
@@ -1121,7 +1138,7 @@ console.log('processLoc: hover: ');
                     case 'end':
                       // the only one currently called as processLoc in handler
 
-console.log('processLoc: end: ');
+console.log('processLoc: end: ' + ui.visible);
 
                       switch (_ui.last_collision) {
                         case 'prev':
@@ -1238,6 +1255,23 @@ console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
               // microsoft
               _ui.cv.addEventListener("mouseenter",  ui.mouse.over,  false);
               _ui.cv.addEventListener("mouseleave",  ui.mouse.out,  false);
+            },
+            blip: {
+              // radar blip like signals to give feedback to touches
+              make: function () {},
+              draw: function () {},
+              list: [],
+              addToList: function () {
+                var blip;
+                
+                blip = {
+                  id: '',
+                  counter: 0,
+                  target_states: {} // on, activated, deserted
+                };
+                
+                this.list.push(blip);
+              }
             }
           };
 
