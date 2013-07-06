@@ -140,7 +140,7 @@ var phh = phh || {};
       o = {
         settings: {
           first_pause : 3000, // used only once on first run, milliseconds
-          pause : 3000, //8000,       // pause between transitions, milliseconds
+          pause : 8000,       // pause between transitions, milliseconds
           transition: {
             delta: {}         // to be populated
           },
@@ -160,13 +160,6 @@ var phh = phh || {};
         init: function () {
           $.extend(true, o.settings.transition, the.prefs.transition);
           o.setBackingScale();
-
-          // build imgs array
-          // $('img', $wrapper).each(function () { // could swap 'img' for a slide selector?
-          //   o.imgs.push({
-          //     el: this
-          //   });
-          // });
 
           // build slides array and imgs array
           $(the.prefs.slide_selector, $wrapper).each(function () {
@@ -218,7 +211,7 @@ var phh = phh || {};
             o.display.paint();
           }
         },
-        engine: { // (function () {
+        engine: {
           // operate the looping and transitioning
           looping: {
             current: 0,
@@ -341,7 +334,6 @@ var phh = phh || {};
             }
           } // /transition
         }, /// engine
-        // }()),
         display: {
           init: function () {
             // called by: o.init()
@@ -517,7 +509,7 @@ var phh = phh || {};
               },
               footer: function () {
                 // make footer background, and save it in
- 								// _ui.chrome.footer ready for use
+ 	              // _ui.chrome.footer ready for use
 
                 var
                   cv = _ui.make.cv,
@@ -544,7 +536,7 @@ var phh = phh || {};
                 // calculate the x location to draw the tab graphic from
                 x_footer_tab = Math.round((cv.width - _ui.tilesheet.footer_tab.width) / 2);
                 y_footer_tab = 0;
-// debugger;
+                
                 // draw shadow
                 cx.drawImage(
                   tilesheet_img,
@@ -1073,9 +1065,6 @@ var phh = phh || {};
                 _ui.last_collision = _ui.mouse_collider.collisionTest(device_loc);
               }
 
-// console.log('processLoc: touched: ' + _ui.mode.touched + ' | ' + _ui.last_collision);
-
-
               // to do: quick and dirty, refactor to only add or remove if needed - set a variable to test
               // if (el.style) el.style.cursor='pointer'
               // in tests only shows up on desktop / mouse
@@ -1092,8 +1081,6 @@ var phh = phh || {};
                   break;
               }
 
-
-
               // ignore collision
               // this only responds to 'end', responding to 'start'
               // is fun, because of the 'end'+show_hide that could immediately follow and undo the show
@@ -1103,13 +1090,9 @@ var phh = phh || {};
                 return;
               }
 
-
-
               // if a pad has been collided with
               if (_ui.last_collision) {
                 if (_ui.mode.hover) { // .hovered
-
-// console.log('processLoc: hover: ');
 
                   if (_ui.mode.mouse === 'upped') {
 
@@ -1166,8 +1149,6 @@ var phh = phh || {};
                     case 'end':
                       // the only one currently called as processLoc in handler
 
-// console.log('processLoc: end: ' + ui.visible);
-
                       switch (_ui.last_collision) {
                         case 'prev':
                           if (ui.visible) {
@@ -1188,8 +1169,6 @@ var phh = phh || {};
                           }
                           break;
                         case 'play_pause':
-
-// console.log('case play_pause: ' + ui.visible + ' ' + o.state.looping);
                           if (ui.visible) {
                             o.state.looping = !o.state.looping;
 
@@ -1335,9 +1314,6 @@ var phh = phh || {};
               _ui.footer.cv.width = _ui.cv.width;
               _ui.footer.cv.height = _ui.cv.height;
 
-
-console.log('init: ' + ui.footer_height);
-
               var ui_css = {
                 width: o.display.css.width,
                 height: o.display.css.height + ui.footer_height.css
@@ -1388,7 +1364,6 @@ console.log('init: ' + ui.footer_height);
 						 _ui.footer.cv.width = _ui.cv.width;
              _ui.footer.cv.height = _ui.cv.height;
 
-
               var ui_css = {
                 width: o.display.css.width,
                 height: o.display.css.height + ui.footer_height.css
@@ -1396,7 +1371,6 @@ console.log('init: ' + ui.footer_height);
 
               $(_ui.cv).css(ui_css);
               $(_ui.footer.cv).css(ui_css);
-
 
               // could there be a race condition where this runs before ui.init() ?
               // dont want to make buttons or footer if there could be!
@@ -1455,7 +1429,6 @@ console.log('init: ' + ui.footer_height);
                 var loc;
                 _ui.mode.touched = true;
                 _ui.mode.touchtype = 'start';
-console.log('touch start');
 
                 // triggers transition ERROR ?
                 loc = _ui.getTouchLoc(tv);
@@ -1466,12 +1439,9 @@ console.log('touch start');
               },
               move: function (tv) {
                 _ui.mode.touchtype = 'move';
-//console.log('touch move');
-
                 tv.preventDefault();
               },
               end: function (tv) {
-console.log('touch end');
                 var loc = _ui.getTouchLoc(tv);
 
                 _ui.mode.touchtype = 'end';
@@ -1562,7 +1532,6 @@ console.log('touch end');
           }(o))
         );
       });
-
 
     }
   }; // /phh.magic_lantern
