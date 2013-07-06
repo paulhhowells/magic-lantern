@@ -10,7 +10,7 @@ version: 0.4 - unfinished
 * provides a css & js fallback for browsers that don’t support canvas
 * tested within Drupal 7
 
-## notes
+## usage notes
 Using jQuery 1.5 for Drupal 7 compatibility
 
 ## open source
@@ -36,3 +36,5 @@ Pull requests for the javascript or css will not be sought before I reach a work
     * add touch swipe to trigger next and previous
     * when slide is (wrapped in) a link discover and present url
 
+## design notes
+* use of multiple canvases
