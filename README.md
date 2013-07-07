@@ -18,12 +18,13 @@ Help to wrap this in a Drupal module would be very welcome, as would any comment
 Pull requests for the javascript or css will not be sought before I reach a working version 1.0.
 
 ## to do
+* fold in fallback for older browsers
 * test on Android
 * test on a Windows 8 device with simultaneous touch and mouse events
 * wrap in a Drupal 7 module
 * port Drupal 7 module to Drupal 8
 
-* <strike>debug</strike?
+* <strike>debug</strike>
 
 * touch feedback
     * signal on touch start, perhaps followed by a fadeout and shape change
