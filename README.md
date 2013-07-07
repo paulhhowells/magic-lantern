@@ -23,8 +23,7 @@ Pull requests for the javascript or css will not be sought before I reach a work
 * wrap in a Drupal 7 module
 * port Drupal 7 module to Drupal 8
 
-* debug
-    * -
+* <strike>debug</strike?
 
 * touch feedback
     * signal on touch start, perhaps followed by a fadeout and shape change
@@ -37,4 +36,7 @@ Pull requests for the javascript or css will not be sought before I reach a work
     * when slide is (wrapped in) a link discover and present url
 
 ## design notes
-* use of multiple canvases
+* profiling revealed the most significant bottleneck to be the rendering of background and foreground images on the (single) canvas. Using two canvases (one for the background, one for the foreground) immediately improved the situation as the browser found it less taxing to composite them as two DOM elements.  Use of two canvases created the opportunity to only paint the background when needed, which provided further performance gains.
+ 
+
+
