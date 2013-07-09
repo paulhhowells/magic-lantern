@@ -1706,7 +1706,7 @@ var phh = phh || {};
   }());
 
   phh.collider = function () {
-    // v.0.1
+    // v.0.3
     //
     // public methods:
     //  register()
