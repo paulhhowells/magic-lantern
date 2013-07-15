@@ -57,7 +57,7 @@ var phh = phh || {};
   };
 
   phh.magic_lantern = {
-    // version: 0.3
+    // version: 0.4
     //
     // naming:
     //   bg == background
@@ -103,7 +103,10 @@ var phh = phh || {};
       // use canvas based slideshow, or fallback to sliding slideshow
       if (phh.test.canvas) {
         $(the.prefs.slides_selector).each(function () {
-          the.canvas_slideshow(this);
+          
+          the.mechanical_slideshow(this);
+          
+          //the.canvas_slideshow(this);
         });
       } else {
         $(the.prefs.slides_selector).each(function () {
@@ -283,11 +286,11 @@ var phh = phh || {};
             transition_func = function () {
               var
                 current_time,
-                position,
-                x, y,
-                width,
-                height,
-                opacity;
+                position;
+                //x, y,
+                //width,
+                //height,
+                //opacity;
 
               current_time = (Date.now) ? Date.now() : +new Date;
               position = current_time > finish ? 1 : (current_time - start) / o.settings.transition.duration;
@@ -840,7 +843,7 @@ var phh = phh || {};
                 // notes: test for backing_scale === 1 before calling
                 var
                   icon,
-                  button,
+                  //button,
                   button_name,
                   i,
                   i_loc,
@@ -1533,6 +1536,193 @@ var phh = phh || {};
         );
       });
 
+    },
+    mechanical_slideshow: function (slideshow_container) {
+      var
+        the = this,
+        o,
+        $slideshow_container = $(slideshow_container),
+        $slide_frame,
+        $images, // assumes each slide contains only one image
+        slide_frame_width = 0,
+        slide_callback_count,
+        slide_callback,
+        slide_width,
+        img_loader_callback;
+
+      o = {
+        first_pause : 1000, // milliseconds
+        pause : 12000,      // milliseconds
+        speed : 20,         // milliseconds
+        denominator : 20,
+        timeout: null,
+        frame_el: null,
+        slides: [],
+        number_of_slides: 0,
+        current_slide_num: 0,
+        target_slide_num: 0,
+        looping: false,
+        looping_timeout: null,
+        start: function () {
+           var
+            the = this,
+            timeout,
+            timeout_callback;
+          the.looping = true;
+          timeout_callback = (function (the) {
+            return function () {
+              the.loop();
+            };
+          }(the));
+
+          timeout = setTimeout(timeout_callback, the.first_pause);
+        },
+        // stop: function () {},
+        // next: function () {},
+        // previous: function () {},
+        // run: function () {},
+        loop: function () {
+           var
+            the = this,
+            callback,
+            timeout_callback;
+
+          the.target_slide_num = the.current_slide_num + 1;
+          if (the.target_slide_num >= the.number_of_slides) {
+            the.target_slide_num = 0;
+          }
+
+          callback = (function (the) {
+            return function () {
+              // the.current_slide_num = the.target_slide_num;
+              if (the.looping) {
+                the.loop();
+               }
+            };
+          }(the));
+
+          timeout_callback = (function (the, callback) {
+            return function () {
+              clearTimeout(the.looping_timeout);
+              the.slide_to_target(callback);
+            };
+          }(the, callback));
+
+          // after a pause, call slide_to_target(callback)
+          the.looping_timeout = setTimeout(timeout_callback, the.pause);
+        },
+        slide_to_target: function (callback) {
+          var
+            the = this,
+            timeout,
+            animate;
+
+          animate = function () {
+            var
+               x,
+               target_x,
+               current_x,
+               frame_el_left,
+               adjust;
+
+            target_x = the.slides[the.target_slide_num].position_x;
+            frame_el_left = the.frame_el.style.left || 0;
+            current_x = parseInt(frame_el_left, 10);
+            x = current_x;
+
+            if (current_x < target_x) {
+              adjust = Math.ceil((target_x - current_x) / the.denominator);
+              x = current_x + adjust;
+              if (x > target_x) {
+                x = target_x;
+              }
+            } else if (current_x > target_x) {
+              adjust = Math.ceil((current_x - target_x) / the.denominator);
+              x = current_x - adjust;
+              if (x < target_x) {
+                x = target_x;
+              }
+            }
+
+            the.setPosX(the.frame_el, x);
+
+            if (x === target_x) {
+               // then stop
+
+               the.current_slide_num = the.target_slide_num;
+               clearTimeout(timeout);
+
+               // avoid calling callback unless it's a function, it could be undefined
+              if (callback && !!(typeof callback === 'function' || typeof callback === 'Function' )) { // capitalised Function?
+                callback.call();
+               }
+            } else {
+              // else repeat
+              timeout = setTimeout(animate, the.speed);
+            }
+           };
+           animate();
+        },
+        setPosX: function (el, pos_x) {
+          if (el instanceof $) {
+            el = el.get(0);
+          }
+          el.style.left = pos_x + "px";
+        }
+      };
+
+      $slide_frame = $(the.prefs.slide_frame_selector, $slideshow_container);
+      o.frame_el = $slide_frame[0];
+      $slide_frame.
+        addClass('slide-frame').
+        wrap('<div class="slide-window" />');
+      $(the.prefs.slide_selector, $slideshow_container).addClass('slide');
+      $slideshow_container.addClass('slides');
+      $images = $('img', $slideshow_container);
+      o.number_of_slides = $images.length;
+      slide_callback_count = o.number_of_slides;
+
+      $('img', $slideshow_container).each(function () {
+        o.slides.push({
+          el : this
+          // position_x: position_x,
+          // width: slide_width
+         });
+      });
+
+      // when slides are responsive the source image may be wider than the slide,
+      // so deduce the slide width from it's wrapper
+      // this assumes that the mechanical slideshow will run in older browsers that do not respond to breakpoints
+      // and that therefore this width will not vary
+      slide_width = $slide_frame.width();
+
+      img_loader_callback = function () {
+        var
+          i,
+          i_slide,
+          i_el;
+
+        for (i = 0; i < o.number_of_slides; i += 1) {
+          i_slide = o.slides[i];
+          i_el = i_slide.el;
+          // i_slide_width = i_el.width;
+          i_slide.position_x = 0 - slide_frame_width;
+          i_slide.width = i_el.width;
+
+          // note that slide_width is not based on image width
+          slide_frame_width += slide_width;
+        }
+
+         $slide_frame.width(slide_frame_width);
+
+         // i_el
+         $('.slide', $slide_frame).each(function () {
+          $(this).width(slide_width);
+         });
+
+         o.start();
+      };
+      phh.imgLoader($images, img_loader_callback);
     }
   }; // /phh.magic_lantern
 
