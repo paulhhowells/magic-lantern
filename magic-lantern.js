@@ -104,9 +104,9 @@ var phh = phh || {};
       if (phh.test.canvas) {
         $(the.prefs.slides_selector).each(function () {
           
-          the.mechanical_slideshow(this);
+          //the.mechanical_slideshow(this);
           
-          //the.canvas_slideshow(this);
+          the.canvas_slideshow(this);
         });
       } else {
         $(the.prefs.slides_selector).each(function () {
@@ -1727,6 +1727,10 @@ var phh = phh || {};
   }; // /phh.magic_lantern
 
 
+
+
+
+
   // move slideLoader into magic_lantern
   // or build imgs[] in parallel?
   phh.slideLoader = function (slide_array, all_loaded_callback) {
@@ -1743,7 +1747,7 @@ var phh = phh || {};
   };
 
   phh.imgLoader = function (img_array, all_loaded_callback) {
-    // v 1.0
+    // v 1.1
     // runs a callback when all images in array are loaded
     //
     // arguments:
