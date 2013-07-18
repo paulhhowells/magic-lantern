@@ -20,6 +20,7 @@ Pull requests for the javascript or css will not be sought before I reach a work
 ## to do
 * <strike>fold in fallback for older browsers</strike>
 * add classes .slides-canvas and .slides-mechanical
+* look to see what could be done before dom ready - redesign to run init before jQuery ready fires
 * load tilesheet sprite before dom loaded?
 * profile - investigate how the first slide could appear faster (when used within Drupal 7)
 * test on Android

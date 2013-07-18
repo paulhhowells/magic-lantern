@@ -36,6 +36,8 @@
     .slides {
       position: relative;
       }
+    .slides-canvas {}
+    .slides-mechanical {}
     .slides-bg,
     .slides-fg,
     .slides-ui-bg {
@@ -45,6 +47,9 @@
     .slides-ui {
       position: relative;
       display: block;
+    }
+    .slides-bg {
+      background-color: #fff;
     }
     .slides-ui-hidden {
       opacity: 0;
@@ -78,15 +83,6 @@
       float: left;
     }
 
-
-
-    /*
-    .slides-bg {border: 1px solid black;}
-    .slides-fg {border: 1px solid black;}
-    .slides-ui-bg {border: 1px solid blue;}
-    .slides-ui {border: 1px solid red;}
-    */
-
   </style>
 
 </head>
@@ -111,13 +107,12 @@
 
     <p>some sample text</p>
   </div>
-  <!-- <script src='../sites/all/modules/jquery_update/replace/jquery/1.5/jquery.js'></script> -->
-  <script src='../jquery/1.5/jquery.js'></script>
+  <script src='../jquery/1.5/jquery.min.js'></script>
   <script>
     if (typeof jQuery === 'undefined') {
       document.write(unescape("%3Cscript src='http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js' %3E%3C/script%3E"));
     }
   </script>
-  <script src='magic-lantern.js'></script>
+  <script src='magic-lantern.min.js'></script>
 </body>
 </html>
