@@ -1,120 +1,123 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="description" content="magic lantern slideshow" />
-	<meta name="author" content="paulhhowells" />
-	<meta name="HandheldFriendly" content="True" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="description" content="magic lantern slideshow" />
+  <meta name="author" content="paulhhowells" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-	<title>magic lantern</title>
-	<style>
-		body {
-			margin: 0;
-			padding: 0;
-			background-color: #ddd;
-			font-family: sans-serif;
-		}
-		h1 {
-			margin: 0.25em 0 0.25em -0.045em;
-			padding: 0;
-			font-size: 4em;
-			line-height: 1em;
-			font-weight: bold;
-			letter-spacing: -0.05em;
-			color: #fff;
-		}
-		.wrapper {
-			/* width: 320px; */
-			/* margin: 0 10px 0 10px; */
-			margin: 0 auto;
-			max-width: 800px;
-		}
-		canvas {
-			display: block;
-		}
+  <title>magic lantern</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #ddd;
+      font-family: sans-serif;
+    }
+    h1 {
+      margin: 0.25em 0 0.25em -0.045em;
+      padding: 0;
+      font-size: 4em;
+      line-height: 1em;
+      font-weight: bold;
+      letter-spacing: -0.05em;
+      color: #fff;
+    }
+    .wrapper {
+      /* width: 320px; */
+      /* margin: 0 10px 0 10px; */
+      margin: 0 auto;
+      max-width: 800px;
+    }
+    
+    /* Magic Lantern */
+    /* todo: add .slides-canvas and .slides-mechanical */
+    .slides {
+      position: relative;
+      }
+    .slides-bg,
+    .slides-fg,
+    .slides-ui-bg {
+      position: absolute;
+      display: block;
+      }
+    .slides-ui {
+      position: relative;
+      display: block;
+    }
+    .slides-ui-hidden {
+      opacity: 0;
+    }
+    .slides-ui-pointer {
+      cursor: pointer;
+    }
+    .slides-ui-smooth {
+      -moz-transition-property: opacity;
+      -webkit-transition-property: opacity;
+      transition-property: opacity;
 
-		.slides {
-		  position: relative;
-		  }
-		.slides-bg {position: absolute;}
-		.slides-fg {position: absolute;}
-		.slides-ui-bg {position: absolute;}
-		.slides-ui {
-			position: relative;
-		}
-		.slides-ui-hidden {
-			opacity: 0;
-		}
-		.slides-ui-pointer {
-  		cursor: pointer;
-		}
-		.slides-ui-smooth {
-  		-moz-transition-property: opacity;
-			-webkit-transition-property: opacity;
-			transition-property: opacity;
+      -moz-transition-duration: 1s;
+      -webkit-transition-duration: 1s;
+      transition-duration: 1s;
+    }
 
-			-moz-transition-duration: 1s;
-			-webkit-transition-duration: 1s;
-			transition-duration: 1s;
-		}
-		
-		/* fall back */
-		.slide-window {
-    	position: relative;
-    	overflow: hidden;
+    /* fall back */
+    .slide-window {
+      position: relative;
+      overflow: hidden;
     }
     .slide-frame {
-    	position: relative;
-    	overflow: hidden;
-    	left: 0;
+      position: relative;
+      overflow: hidden;
+      left: 0;
     }
     .slide {
-    	position: relative;
-    	overflow: hidden;
-    	float: left;
+      position: relative;
+      overflow: hidden;
+      float: left;
     }
 
 
 
-		/*
-		.slides-bg {border: 1px solid black;}
-		.slides-fg {border: 1px solid black;}
-		.slides-ui-bg {border: 1px solid blue;}
-		.slides-ui {border: 1px solid red;}
-		*/
-		
-	</style>
+    /*
+    .slides-bg {border: 1px solid black;}
+    .slides-fg {border: 1px solid black;}
+    .slides-ui-bg {border: 1px solid blue;}
+    .slides-ui {border: 1px solid red;}
+    */
+
+  </style>
 
 </head>
 <body>
-	<div class="wrapper">
-		<h1>magic lantern</h1>
+  <div class="wrapper">
+    <h1>magic lantern</h1>
 
-		<!-- mark-up based on Drupal 7 Views output -->
-		<div id="block-views-front-page-slideshow-block">
-			<div class="view-content">
-				<div class="views-row">
-					<img src="A-800x600.png" alt="A-800x600" />
-				</div>
-				<div class="views-row">
-					<img src="B-800x600.png" alt="B-800x600" />
-				</div>
-				<div class="views-row">
-					<img src="C-800x600.png" alt="C-800x600" />
-				</div>
-			</div>
-		</div>
-    
+    <!-- mark-up based on Drupal 7 Views output -->
+    <div id="block-views-front-page-slideshow-block">
+      <div class="view-content">
+        <div class="views-row">
+          <img src="A-800x600.png" alt="A-800x600" />
+        </div>
+        <div class="views-row">
+          <img src="B-800x600.png" alt="B-800x600" />
+        </div>
+        <div class="views-row">
+          <img src="C-800x600.png" alt="C-800x600" />
+        </div>
+      </div>
+    </div>
+
     <p>some sample text</p>
-	</div>
-	<!-- <script src='../sites/all/modules/jquery_update/replace/jquery/1.5/jquery.js'></script> -->
-	<script src='../jquery/1.5/jquery.js'></script>
-	<script>
-		if (typeof jQuery === 'undefined') {
-			document.write(unescape("%3Cscript src='http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js' %3E%3C/script%3E"));
-		}
-	</script>
-	<script src='magic-lantern.js'></script>
+  </div>
+  <!-- <script src='../sites/all/modules/jquery_update/replace/jquery/1.5/jquery.js'></script> -->
+  <script src='../jquery/1.5/jquery.js'></script>
+  <script>
+    if (typeof jQuery === 'undefined') {
+      document.write(unescape("%3Cscript src='http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js' %3E%3C/script%3E"));
+    }
+  </script>
+  <script src='magic-lantern.js'></script>
 </body>
 </html>
